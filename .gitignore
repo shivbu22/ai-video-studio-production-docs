@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.venv/
+__pycache__/
+*.pyc
+
+# Builds & Outputs
+dist/
+build/
+out/
+spike/out/*.mp4
+spike/out/*.wav
+.turbo/
+.next/
+
+# Environment & Secrets
+.env
+.env.local
+*.pem
+
+# Logs & Temporary
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+scratch/

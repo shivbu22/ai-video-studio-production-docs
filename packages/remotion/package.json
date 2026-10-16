@@ -1,0 +1,24 @@
+{
+  "name": "@ai-video-studio/remotion",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "dev": "remotion preview src/index.ts",
+    "build": "remotion bundle src/index.ts",
+    "render": "remotion render src/index.ts MainTimeline out/video.mp4",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ai-video-studio/shared-types": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "^4.0.220"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}
