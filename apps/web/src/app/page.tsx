@@ -8,6 +8,7 @@ import { ClipInspector } from "../components/RightPanel/ClipInspector";
 import { AICommandBar } from "../components/AICommandBar/AICommandBar";
 import { OnePromptModal } from "../components/Modals/OnePromptModal";
 import { ExportPublishModal } from "../components/Modals/ExportPublishModal";
+import { ConnectionsModal } from "../components/Modals/ConnectionsModal";
 import { YouTubeClipFinder } from "../components/LeftPanel/YouTubeClipFinder";
 import { VoiceCleanStation } from "../components/LeftPanel/VoiceCleanStation";
 import { TranscriptEditor, TranscriptWord } from "../components/LeftPanel/TranscriptEditor";
@@ -95,6 +96,8 @@ export default function StudioEditorPage() {
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceMode>("edit");
   const [isOnePromptModalOpen, setIsOnePromptModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isConnectionsOpen, setIsConnectionsOpen] = useState(false);
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [activeLut, setActiveLut] = useState("Moody Teal & Orange");
 
   // Playhead & Transport State
@@ -121,6 +124,7 @@ export default function StudioEditorPage() {
   // Undo/Redo Stacks
   const [history, setHistory] = useState<TimelineClip[][]>([]);
   const [future, setFuture] = useState<TimelineClip[][]>([]);
+  const [isTimelineDocked, setIsTimelineDocked] = useState(false);
 
   // Toast / Notification
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -327,12 +331,13 @@ export default function StudioEditorPage() {
   };
 
   // Insert Template
-  const handleInsertTemplate = (template: MotionTemplateItem) => {
+  const handleInsertTemplate = (templateOrId: MotionTemplateItem | string, props?: any) => {
     pushHistory();
+    const templateName = typeof templateOrId === "string" ? templateOrId : templateOrId.name;
     const newClip: TimelineClip = {
       id: `c_v2_${Date.now()}`,
       trackId: "v2",
-      title: `${template.name}: New Scene`,
+      title: `${templateName}: New Scene`,
       startMs: currentTimeMs,
       durationMs: 4000,
       colorClass: "bg-indigo-600/40 text-indigo-200",
@@ -341,7 +346,7 @@ export default function StudioEditorPage() {
     };
     setClips((prev) => [...prev, newClip]);
     setSelectedClipId(newClip.id);
-    showToast(`Inserted ${template.name} at playhead`);
+    showToast(`Inserted ${templateName} at playhead`);
   };
 
   // Apply LUT
@@ -442,13 +447,51 @@ export default function StudioEditorPage() {
         activeWorkspace={activeWorkspace}
         onWorkspaceChange={setActiveWorkspace}
         onOpenOnePromptModal={() => setIsOnePromptModalOpen(true)}
+        onOpenConnections={() => setIsConnectionsOpen(true)}
         onOpenProposals={() => setLeftTab("proposals")}
         hasPendingProposal={proposals.length > 0}
         onExport={handleExport}
+        onToggleCopilot={() => setIsCopilotOpen(!isCopilotOpen)}
+        isCopilotOpen={isCopilotOpen}
       />
 
-      {/* 2. Middle Work Area (Switches seamlessly between Edit, Color, Audio, and Director suites) */}
+      {/* 2. Middle Work Area (Switches seamlessly between Edit, ClipFinder, VO Cleanup, Remotion 3D, Color, Audio, Director, and Publish suites) */}
       <div className="flex-1 flex overflow-hidden">
+        {activeWorkspace === "clipfinder" && (
+          <ClipFinderWorkspace
+            onInsertClip={(title, durationMs) => {
+              const newClip: TimelineClip = {
+                id: `c_yt_${Date.now()}`,
+                trackId: "v2",
+                title,
+                startMs: currentTimeMs,
+                durationMs,
+                colorClass: "bg-violet-600/40 text-violet-200",
+                borderClass: "border-violet-500/70",
+                type: "video"
+              };
+              setClips((prev) => [...prev, newClip]);
+              showToast(`Inserted 4K clip into timeline at ${Math.round(currentTimeMs/1000)}s`);
+            }}
+            currentTimeMs={currentTimeMs}
+          />
+        )}
+
+        {activeWorkspace === "cleanup" && (
+          <VoiceCleanupWorkspace
+            onApplyCleanAudio={handleApplyCleanVoice}
+          />
+        )}
+
+        {activeWorkspace === "remotion" && (
+          <Remotion3DWorkspace
+            onInsertTemplate={(templateName) => {
+              handleInsertTemplate(templateName as any);
+              showToast(`Remotion 3D template added: ${templateName}`);
+            }}
+          />
+        )}
+
         {activeWorkspace === "color" && (
           <ColorGradingWorkspace
             currentTimeMs={currentTimeMs}
@@ -485,6 +528,10 @@ export default function StudioEditorPage() {
             onExecuteCommand={handleExecuteAICommand}
             onShowToast={showToast}
           />
+        )}
+
+        {activeWorkspace === "publish" && (
+          <PublishingKitWorkspace />
         )}
 
         {activeWorkspace === "edit" && (
@@ -626,6 +673,7 @@ export default function StudioEditorPage() {
                 currentSceneTitle="Quantum Supremacy Benchmark"
                 currentTemplateName="BarChart"
                 activeLut={activeLut}
+                activeClip={selectedClip}
               />
 
               {/* Right Clip Inspector Panel */}
@@ -644,65 +692,69 @@ export default function StudioEditorPage() {
       </div>
 
       {/* 3. Bottom Timeline Section */}
-      <div className="h-72 bg-studio-950 flex flex-col border-t border-studio-800 flex-shrink-0 select-none">
-        {/* Timeline Action Bar (Select V, Razor C, Snap, Split, Zoom) */}
-        <TimelineToolbar
-          toolMode={toolMode}
-          onToolModeChange={setToolMode}
-          snapping={snapping}
-          onToggleSnapping={() => setSnapping(!snapping)}
-          zoomScale={zoomScale}
-          onZoomChange={setZoomScale}
-          canUndo={history.length > 0}
-          canRedo={future.length > 0}
-          onUndo={handleUndo}
-          onRedo={handleRedo}
-          onSplitAtPlayhead={handleSplitAtPlayhead}
-          onDeleteSelected={handleDeleteSelected}
-          hasSelection={selectedClipId !== null}
-        />
+      {(activeWorkspace === "edit" || isTimelineDocked) && (
+        <div className={`${activeWorkspace === "edit" ? "h-72" : "h-56"} bg-studio-950 flex flex-col border-t border-studio-800 flex-shrink-0 select-none`}>
+          {/* Timeline Action Bar (Select V, Razor C, Snap, Split, Zoom) */}
+          <TimelineToolbar
+            toolMode={toolMode}
+            onToolModeChange={setToolMode}
+            snapping={snapping}
+            onToggleSnapping={() => setSnapping(!snapping)}
+            zoomScale={zoomScale}
+            onZoomChange={setZoomScale}
+            canUndo={history.length > 0}
+            canRedo={future.length > 0}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            onSplitAtPlayhead={handleSplitAtPlayhead}
+            onDeleteSelected={handleDeleteSelected}
+            hasSelection={selectedClipId !== null}
+          />
 
-        {/* Timeline Timecode Ruler */}
-        <TimelineRuler
-          totalDurationMs={totalDurationMs}
-          currentTimeMs={currentTimeMs}
-          zoomScale={zoomScale}
-          onSeek={setCurrentTimeMs}
-          headerWidth={HEADER_WIDTH}
-        />
+          {/* Timeline Timecode Ruler */}
+          <TimelineRuler
+            totalDurationMs={totalDurationMs}
+            currentTimeMs={currentTimeMs}
+            zoomScale={zoomScale}
+            onSeek={setCurrentTimeMs}
+            headerWidth={HEADER_WIDTH}
+          />
 
-        {/* Multi-Track Canvas */}
-        <TimelineCanvas
-          tracks={tracks}
-          clips={clips}
-          currentTimeMs={currentTimeMs}
-          totalDurationMs={totalDurationMs}
-          zoomScale={zoomScale}
-          toolMode={toolMode}
-          snapping={snapping}
-          selectedClipId={selectedClipId}
-          onSelectClip={(id) => {
-            setSelectedClipId(id);
-            if (!showInspector) setShowInspector(true);
-          }}
-          onSeek={setCurrentTimeMs}
-          onClipTrim={handleClipTrim}
-          onClipSplit={handleClipSplit}
-          onTrackToggleLock={(id) =>
-            setTracks((ts) => ts.map((t) => (t.id === id ? { ...t, locked: !t.locked } : t)))
-          }
-          onTrackToggleMute={(id) =>
-            setTracks((ts) => ts.map((t) => (t.id === id ? { ...t, muted: !t.muted } : t)))
-          }
-          onTrackToggleHide={(id) =>
-            setTracks((ts) => ts.map((t) => (t.id === id ? { ...t, hidden: !t.hidden } : t)))
-          }
-          headerWidth={HEADER_WIDTH}
-        />
-      </div>
+          {/* Multi-Track Canvas */}
+          <TimelineCanvas
+            tracks={tracks}
+            clips={clips}
+            currentTimeMs={currentTimeMs}
+            totalDurationMs={totalDurationMs}
+            zoomScale={zoomScale}
+            toolMode={toolMode}
+            snapping={snapping}
+            selectedClipId={selectedClipId}
+            onSelectClip={(id) => {
+              setSelectedClipId(id);
+              if (!showInspector) setShowInspector(true);
+            }}
+            onSeek={setCurrentTimeMs}
+            onClipTrim={handleClipTrim}
+            onClipSplit={handleClipSplit}
+            onTrackToggleLock={(id) =>
+              setTracks((ts) => ts.map((t) => (t.id === id ? { ...t, locked: !t.locked } : t)))
+            }
+            onTrackToggleMute={(id) =>
+              setTracks((ts) => ts.map((t) => (t.id === id ? { ...t, muted: !t.muted } : t)))
+            }
+            onTrackToggleHide={(id) =>
+              setTracks((ts) => ts.map((t) => (t.id === id ? { ...t, hidden: !t.hidden } : t)))
+            }
+            headerWidth={HEADER_WIDTH}
+          />
+        </div>
+      )}
 
       {/* 4. Bottom AI Director Command Bar (Ctrl+K) */}
-      <AICommandBar onExecuteCommand={handleExecuteAICommand} />
+      {activeWorkspace === "edit" && (
+        <AICommandBar onExecuteCommand={handleExecuteAICommand} />
+      )}
 
       {/* 5. 1-Prompt Autonomous Video Modal */}
       <OnePromptModal
@@ -718,6 +770,54 @@ export default function StudioEditorPage() {
         projectTitle="Quantum Supremacy 2026"
         totalDurationMs={totalDurationMs}
         clips={clips}
+      />
+
+      {/* 7. Claude AI Copilot Dialog Stream (Slot Studio Node) */}
+      <ClaudeAICopilotDrawer
+        isOpen={isCopilotOpen}
+        onClose={() => setIsCopilotOpen(false)}
+      />
+
+      {/* 8. Telemetry Footer Bar (Google Stitch Studio Pro Specs) */}
+      <footer className="h-6 bg-[#07090e] border-t border-slate-800/80 px-4 flex items-center justify-between text-[11px] font-mono text-slate-400 z-40 shrink-0 select-none">
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>REMOTE GPU: NVIDIA RTX 4090 (24GB VRAM - 42% ALLOCATED)</span>
+          </span>
+          <span className="text-slate-600 hidden sm:inline">|</span>
+          <span className="hidden sm:inline">AUDIO LATENCY: 2.1ms</span>
+          <span className="text-slate-600 hidden md:inline">|</span>
+          <span className="hidden md:inline">BUFFER CACHE: 9.8 GB / 32 GB</span>
+          {activeWorkspace !== "edit" && (
+            <>
+              <span className="text-slate-600">|</span>
+              <button
+                onClick={() => setIsTimelineDocked(!isTimelineDocked)}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] transition-colors ${
+                  isTimelineDocked
+                    ? "bg-violet-600 text-white font-bold"
+                    : "bg-slate-800/80 hover:bg-slate-700 text-slate-300"
+                }`}
+              >
+                <span>{isTimelineDocked ? "▾ Hide Timeline Dock" : "▴ Show Timeline Dock"}</span>
+              </button>
+            </>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-cyan-400">REMOTION BUNDLER v4.1.8</span>
+          <span className="text-slate-300 hidden sm:inline">RENDER PROGRESS: 100% READY</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-violet-400"></span>
+            <span className="text-slate-200 font-bold">ONLINE</span>
+          </div>
+        </div>
+      </footer>
+
+      <ConnectionsModal
+        isOpen={isConnectionsOpen}
+        onClose={() => setIsConnectionsOpen(false)}
       />
 
       {/* Toast Notification */}

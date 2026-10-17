@@ -12,7 +12,6 @@ import {
   Sparkles, 
   Sliders, 
   Activity,
-  Waveform as WaveformIcon,
   AudioLines,
   UploadCloud,
   Check
@@ -31,11 +30,30 @@ export const VoiceCleanupWorkspace: React.FC<VoiceCleanupWorkspaceProps> = ({
   const [debreathSensitivity, setDebreathSensitivity] = useState(85);
   const [fillerCutThreshold, setFillerCutThreshold] = useState(90);
   const [hasApplied, setHasApplied] = useState(false);
+  const [playProgress, setPlayProgress] = useState(0);
 
-  // SlotStudio exact example: 
-  // Raw take 7.4s: "(breath) So um, the best way— the best way to grow is to stay consistent."
-  // Clean take 4.7s: "So the best way to grow is to stay consistent."
-  // 3 cuts · 0 words clipped
+  // Animate playback needle
+  React.useEffect(() => {
+    if (!isPlaying) return;
+    const durationMs = activeTake === "raw" ? 7400 : 4700;
+    const interval = setInterval(() => {
+      setPlayProgress((prev) => {
+        if (prev >= 100) {
+          setIsPlaying(false);
+          return 0;
+        }
+        return prev + (100 / (durationMs / 40));
+      });
+    }, 40);
+    return () => clearInterval(interval);
+  }, [isPlaying, activeTake]);
+
+  const handleTogglePlay = () => {
+    if (!isPlaying && playProgress >= 100) {
+      setPlayProgress(0);
+    }
+    setIsPlaying(!isPlaying);
+  };
 
   const handleApply = () => {
     setHasApplied(true);
@@ -162,7 +180,7 @@ export const VoiceCleanupWorkspace: React.FC<VoiceCleanupWorkspaceProps> = ({
           <div className="flex items-center gap-3">
             {/* Play/Pause */}
             <button 
-              onClick={() => setIsPlaying(!isPlaying)}
+              onClick={handleTogglePlay}
               className="w-8 h-8 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-950/40 active:scale-95 transition-all"
             >
               {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
@@ -171,7 +189,10 @@ export const VoiceCleanupWorkspace: React.FC<VoiceCleanupWorkspaceProps> = ({
             {/* Raw vs Clean Toggle (SlotStudio exact UX) */}
             <div className="flex items-center bg-[#161a22] border border-slate-700/80 p-0.5 rounded-lg text-xs">
               <button
-                onClick={() => setActiveTake("raw")}
+                onClick={() => {
+                  setActiveTake("raw");
+                  setPlayProgress(0);
+                }}
                 className={`px-3 py-1 rounded font-medium transition-all ${
                   activeTake === "raw"
                     ? "bg-amber-600/90 text-white shadow-sm"
@@ -181,7 +202,10 @@ export const VoiceCleanupWorkspace: React.FC<VoiceCleanupWorkspaceProps> = ({
                 Raw Take (7.4s)
               </button>
               <button
-                onClick={() => setActiveTake("clean")}
+                onClick={() => {
+                  setActiveTake("clean");
+                  setPlayProgress(0);
+                }}
                 className={`px-3 py-1 rounded font-medium transition-all ${
                   activeTake === "clean"
                     ? "bg-emerald-600 text-white shadow-sm"
@@ -229,7 +253,7 @@ export const VoiceCleanupWorkspace: React.FC<VoiceCleanupWorkspaceProps> = ({
           {/* Dual Waveform Card */}
           <div className="w-full max-w-2xl bg-[#14171d] rounded-xl border border-slate-800 p-5 space-y-4 shadow-2xl">
             {/* Raw Take Waveform */}
-            <div className="space-y-1">
+            <div className={`space-y-1 transition-opacity ${activeTake === "raw" ? "opacity-100 ring-1 ring-amber-500/40 rounded-lg p-1" : "opacity-60"}`}>
               <div className="flex items-center justify-between text-xs font-mono">
                 <span className="text-slate-400 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-red-400"></span>
@@ -238,6 +262,13 @@ export const VoiceCleanupWorkspace: React.FC<VoiceCleanupWorkspaceProps> = ({
                 <span className="text-red-400 font-bold">0:07.4</span>
               </div>
               <div className="h-14 bg-[#0a0c10] rounded border border-slate-800 p-2 flex items-center justify-between relative overflow-hidden">
+                {/* Scanning Playhead Needle */}
+                {activeTake === "raw" && (
+                  <div 
+                    className="absolute top-0 bottom-0 w-0.5 bg-amber-400 z-20 shadow-[0_0_8px_rgba(251,191,36,0.8)] pointer-events-none transition-[left] duration-75"
+                    style={{ left: `${playProgress}%` }}
+                  />
+                )}
                 {/* Simulated Waveform Bars with breath bursts in red */}
                 <div className="w-full flex items-center justify-around h-full">
                   <span className="w-1.5 h-10 bg-red-500 rounded-full animate-pulse" title="Inhale Breath (-12dB)"></span>
@@ -259,7 +290,7 @@ export const VoiceCleanupWorkspace: React.FC<VoiceCleanupWorkspaceProps> = ({
             </div>
 
             {/* Clean Take Waveform */}
-            <div className="space-y-1">
+            <div className={`space-y-1 transition-opacity ${activeTake === "clean" ? "opacity-100 ring-1 ring-emerald-500/40 rounded-lg p-1" : "opacity-60"}`}>
               <div className="flex items-center justify-between text-xs font-mono">
                 <span className="text-emerald-400 flex items-center gap-1.5 font-semibold">
                   <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
@@ -268,6 +299,13 @@ export const VoiceCleanupWorkspace: React.FC<VoiceCleanupWorkspaceProps> = ({
                 <span className="text-emerald-400 font-bold">0:04.7 (-2.7s cut)</span>
               </div>
               <div className="h-14 bg-[#0a0c10] rounded border border-emerald-500/30 p-2 flex items-center justify-between relative overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.08)]">
+                {/* Scanning Playhead Needle */}
+                {activeTake === "clean" && (
+                  <div 
+                    className="absolute top-0 bottom-0 w-0.5 bg-emerald-400 z-20 shadow-[0_0_8px_rgba(52,211,153,0.8)] pointer-events-none transition-[left] duration-75"
+                    style={{ left: `${playProgress}%` }}
+                  />
+                )}
                 {/* Pristine Clean Bars without gaps */}
                 <div className="w-full flex items-center justify-around h-full">
                   <span className="w-1.5 h-6 bg-emerald-400 rounded-full"></span>

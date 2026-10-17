@@ -2,94 +2,31 @@
 
 import React, { useState } from "react";
 import { 
-  UploadCloud, 
   BarChart3, 
-  LineChart, 
   TrendingUp, 
   Quote, 
   Columns3, 
   Layers, 
-  Film, 
-  Music, 
-  Mic, 
-  Plus,
-  Palette,
   Sparkles,
-  Volume2
+  Download,
+  Plus,
+  Play,
+  Check,
+  Award,
+  BookOpen
 } from "lucide-react";
 
 export interface MotionTemplateItem {
   id: string;
   name: string;
-  category: "chart" | "quote" | "comparison" | "counter";
+  category: "chart" | "quote" | "comparison" | "counter" | "tier" | "layers";
   icon: any;
   defaultProps: any;
 }
 
-const TEMPLATES: MotionTemplateItem[] = [
-  {
-    id: "BarChart",
-    name: "Bar Chart",
-    category: "chart",
-    icon: BarChart3,
-    defaultProps: { title: "Performance Comparison", data: [{ label: "A", value: 10 }, { label: "B", value: 25 }] }
-  },
-  {
-    id: "StatCounter",
-    name: "Metric Counter",
-    category: "counter",
-    icon: TrendingUp,
-    defaultProps: { label: "Global Speedup", targetValue: 10000, prefix: "", suffix: "x" }
-  },
-  {
-    id: "QuoteCard",
-    name: "Pull Quote",
-    category: "quote",
-    icon: Quote,
-    defaultProps: { quote: "Quantum will redefine computation.", author: "Physicist" }
-  },
-  {
-    id: "Comparison",
-    name: "Side-by-Side",
-    category: "comparison",
-    icon: Columns3,
-    defaultProps: { leftTitle: "Classical", rightTitle: "Quantum" }
-  },
-  {
-    id: "LineChart",
-    name: "Trend Line",
-    category: "chart",
-    icon: LineChart,
-    defaultProps: { title: "Compute Growth" }
-  },
-  {
-    id: "TierList",
-    name: "Tier Ranking",
-    category: "comparison",
-    icon: Layers,
-    defaultProps: { title: "Architecture Tiers" }
-  }
-];
-
-const LUTS = [
-  { id: "teal_orange", name: "Teal & Orange Blockbuster", desc: "High contrast cinematic Hollywood look", grad: "from-teal-500 to-amber-500" },
-  { id: "cyberpunk", name: "Cyberpunk Neon 2077", desc: "Vibrant ultraviolet and electric cyan tones", grad: "from-fuchsia-500 to-cyan-500" },
-  { id: "vintage", name: "Vintage 35mm Film Grain", desc: "Warm kodak roll tone with gentle halation", grad: "from-amber-600 to-stone-800" },
-  { id: "noir", name: "Noir Black & White", desc: "High dynamic range dramatic monochrome", grad: "from-slate-400 to-slate-950" },
-  { id: "sunset", name: "Sunset Golden Hour", desc: "Rich amber highlights with soft shadows", grad: "from-rose-500 to-amber-400" },
-  { id: "clean", name: "Clean Broadcast 6500K", desc: "Color calibrated neutral reference grade", grad: "from-sky-400 to-blue-600" },
-];
-
-const AUDIO_TRACKS = [
-  { id: "a_bg_1", title: "Cybernetic Horizon Bed", type: "Music Bed", duration: "02:45", bpm: "120 BPM", ducked: true },
-  { id: "a_bg_2", title: "Ambient Deep Focus", type: "Music Bed", duration: "03:10", bpm: "85 BPM", ducked: true },
-  { id: "a_sfx_1", title: "Cinematic Sub Bass Drop", type: "SFX Whoosh", duration: "00:03", bpm: "-", ducked: false },
-  { id: "a_sfx_2", title: "Data Stream Pop Riser", type: "SFX Riser", duration: "00:02", bpm: "-", ducked: false },
-];
-
 interface AssetBinProps {
-  onInsertTemplate: (template: MotionTemplateItem) => void;
-  onApplyLut?: (lutName: string) => void;
+  onInsertTemplate: (templateId: string, props: any) => void;
+  onApplyLut: (lutName: string) => void;
   onUploadMedia: () => void;
 }
 
@@ -98,167 +35,199 @@ export const AssetBin: React.FC<AssetBinProps> = ({
   onApplyLut,
   onUploadMedia,
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<"templates" | "luts" | "audio" | "stock">("templates");
+  const [activeCategory, setActiveCategory] = useState<"motion" | "luts" | "audio">("motion");
+  const [insertedId, setInsertedId] = useState<string | null>(null);
+
+  const slotTemplates = [
+    {
+      id: "BarChart",
+      name: "3D Chrome Bar Chart",
+      tagline: "Chrome bars on mirror floor with live metrics",
+      icon: BarChart3,
+      category: "chart",
+      duration: "5.5s",
+      defaultProps: { title: "Speedup vs Classical Supercomputer", data: [{ label: "Summit", value: 10000 }, { label: "Sycamore", value: 200 }] }
+    },
+    {
+      id: "TierList",
+      name: "Glass Tier List",
+      tagline: "Rank anything live over your footage with glass cards",
+      icon: Award,
+      category: "tier",
+      duration: "6.0s",
+      defaultProps: { title: "Exercise Tier List", tiers: [{ rank: "S", items: ["Deadlift", "Pull-ups"] }, { rank: "A", items: ["Barbell Row"] }] }
+    },
+    {
+      id: "ResearchPaper",
+      name: "Research Paper Lift",
+      tagline: "Scientific journal curls up with highlighted findings",
+      icon: BookOpen,
+      category: "quote",
+      duration: "4.5s",
+      defaultProps: { journal: "Nature 2019", quote: "Quantum supremacy experimentally achieved." }
+    },
+    {
+      id: "StatCounter",
+      name: "Metric Stat Counter",
+      tagline: "Count-up animation landing on the spoken word",
+      icon: TrendingUp,
+      category: "counter",
+      duration: "4.5s",
+      defaultProps: { label: "Computation Speedup", targetValue: 10000, suffix: "x" }
+    },
+    {
+      id: "ExplodedLayers",
+      name: "Exploded Layers FX",
+      tagline: "Footage, graphics, captions & sound pulled apart in 3D",
+      icon: Layers,
+      category: "layers",
+      duration: "4.0s",
+      defaultProps: { layers: ["Footage 4K", "Chrome Graphics", "Audio Ducking", "Word Sync"] }
+    },
+    {
+      id: "QuoteCard",
+      name: "Cinematic Quote Card",
+      tagline: "Director quotation with glassmorphic backdrop",
+      icon: Quote,
+      category: "quote",
+      duration: "4.0s",
+      defaultProps: { quote: "For the last month, every long-form video has been edited by this tool.", author: "Siddharth Dev" }
+    }
+  ];
+
+  const luts = [
+    { name: "Moody Teal & Orange", desc: "Hollywood blockbuster aesthetic" },
+    { name: "Cyberpunk Neon 2077", desc: "High-contrast blues & magenta" },
+    { name: "Vintage 35mm Film", desc: "Warm Kodak Portra organic tones" },
+    { name: "Monochrome Film Noir", desc: "Deep rich contrast black & white" },
+  ];
+
+  const handleInsert = (tmpl: typeof slotTemplates[0]) => {
+    onInsertTemplate(tmpl.id, tmpl.defaultProps);
+    setInsertedId(tmpl.id);
+    setTimeout(() => setInsertedId(null), 2500);
+  };
 
   return (
-    <div className="flex flex-col h-full bg-studio-900 select-none text-xs">
-      {/* Bin Sub-Tab Header */}
-      <div className="p-2 border-b border-studio-800 flex items-center justify-between">
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
-          <button
-            onClick={() => setActiveSubTab("templates")}
-            className={`px-2 py-1 rounded text-[11px] font-medium transition-colors ${
-              activeSubTab === "templates" ? "bg-violet-600 text-white" : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            Motion FX
-          </button>
-          <button
-            onClick={() => setActiveSubTab("luts")}
-            className={`px-2 py-1 rounded text-[11px] font-medium transition-colors ${
-              activeSubTab === "luts" ? "bg-amber-600 text-white" : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            LUTs
-          </button>
-          <button
-            onClick={() => setActiveSubTab("audio")}
-            className={`px-2 py-1 rounded text-[11px] font-medium transition-colors ${
-              activeSubTab === "audio" ? "bg-emerald-600 text-white" : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            Audio
-          </button>
-          <button
-            onClick={() => setActiveSubTab("stock")}
-            className={`px-2 py-1 rounded text-[11px] font-medium transition-colors ${
-              activeSubTab === "stock" ? "bg-cyan-600 text-white" : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            Stock
-          </button>
+    <div className="flex flex-col h-full bg-[#05060a] select-none text-xs text-slate-200 border-r border-white/5 overflow-hidden">
+      {/* Header */}
+      <div className="p-3.5 bg-[#0a0c12] border-b border-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Layers className="w-4 h-4 text-[#3B63FF]" />
+          <span className="font-bold text-white text-xs tracking-wide">Motion Studio & FX Bin</span>
         </div>
+        <span className="text-[10px] bg-[#3B63FF]/15 text-[#9fb4ff] font-semibold px-2 py-0.5 rounded-full border border-[#3B63FF]/30">
+          Remotion 4+
+        </span>
+      </div>
 
+      {/* Category Pills */}
+      <div className="flex bg-[#0a0c12] p-1.5 border-b border-white/5 gap-1">
         <button
-          onClick={onUploadMedia}
-          className="flex items-center gap-1 bg-studio-800 hover:bg-studio-700 text-slate-200 px-2 py-1 rounded border border-studio-700 text-[11px]"
+          onClick={() => setActiveCategory("motion")}
+          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-lg transition-all ${
+            activeCategory === "motion" ? "bg-[#3B63FF] text-white shadow" : "text-slate-400 hover:text-white"
+          }`}
         >
-          <UploadCloud className="w-3 h-3 text-cyan-400" />
-          <span>Import</span>
+          Motion Graphics
+        </button>
+        <button
+          onClick={() => setActiveCategory("luts")}
+          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-lg transition-all ${
+            activeCategory === "luts" ? "bg-[#3B63FF] text-white shadow" : "text-slate-400 hover:text-white"
+          }`}
+        >
+          3D Cinema LUTs
         </button>
       </div>
 
-      {/* Tab Contents */}
-      <div className="flex-1 p-3 overflow-y-auto space-y-2">
-        {/* 1. Motion Templates */}
-        {activeSubTab === "templates" && (
-          <div className="grid grid-cols-2 gap-2">
-            {TEMPLATES.map((tmpl) => {
-              const Icon = tmpl.icon;
-              return (
-                <div
-                  key={tmpl.id}
-                  onClick={() => onInsertTemplate(tmpl)}
-                  className="p-3 bg-studio-950/80 hover:bg-studio-800 border border-studio-800 hover:border-violet-500/60 rounded-lg cursor-pointer transition-all flex flex-col justify-between h-24 group shadow-sm active:scale-95"
-                >
-                  <div className="flex items-center justify-between">
-                    <Icon className="w-4 h-4 text-violet-400 group-hover:scale-110 transition-transform" />
-                    <button className="opacity-0 group-hover:opacity-100 bg-violet-600 text-white p-1 rounded-full shadow transition-opacity">
-                      <Plus className="w-2.5 h-2.5" />
-                    </button>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-slate-200 text-[11px] block">{tmpl.name}</span>
-                    <span className="text-[9px] text-slate-500 uppercase tracking-wider">{tmpl.category}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {activeCategory === "motion" && (
+          <div className="space-y-3">
+            <div>
+              <h3 className="text-sm font-bold text-white">Then it edits like a motion studio.</h3>
+              <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                3D chrome charts, research that lifts off the page, glass tier lists, and sound on every cut.
+              </p>
+            </div>
 
-        {/* 2. Cinematic LUTs */}
-        {activeSubTab === "luts" && (
-          <div className="space-y-2">
-            {LUTS.map((lut) => (
-              <div
-                key={lut.id}
-                onClick={() => onApplyLut?.(lut.name)}
-                className="p-3 bg-studio-950/80 hover:bg-studio-800 border border-studio-800 hover:border-amber-500/60 rounded-lg cursor-pointer transition-all flex items-center justify-between group active:scale-95 shadow-sm"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-3.5 h-3.5 rounded-full bg-gradient-to-tr ${lut.grad} shadow-sm`} />
-                    <span className="font-semibold text-slate-200 text-xs">{lut.name}</span>
-                  </div>
-                  <p className="text-[10px] text-slate-500">{lut.desc}</p>
-                </div>
-                <button className="opacity-0 group-hover:opacity-100 px-2 py-1 rounded bg-amber-600 text-white font-medium text-[10px] shadow transition-opacity">
-                  Apply
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+            <div className="space-y-2.5">
+              {slotTemplates.map((tmpl) => {
+                const IconComponent = tmpl.icon;
+                const isJustInserted = insertedId === tmpl.id;
+                return (
+                  <div
+                    key={tmpl.id}
+                    className="p-3 bg-[#10131b] rounded-xl border border-white/5 hover:border-white/15 transition-all space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-[#3B63FF]/20 border border-[#3B63FF]/40 text-[#9fb4ff] flex items-center justify-center">
+                          <IconComponent className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white">{tmpl.name}</h4>
+                          <span className="text-[10px] text-slate-400 block">{tmpl.tagline}</span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded">
+                        {tmpl.duration}
+                      </span>
+                    </div>
 
-        {/* 3. Audio & SFX */}
-        {activeSubTab === "audio" && (
-          <div className="space-y-2">
-            {AUDIO_TRACKS.map((track) => (
-              <div
-                key={track.id}
-                className="p-2.5 bg-studio-950/80 hover:bg-studio-800 border border-studio-800 rounded-lg flex items-center justify-between cursor-pointer transition-all"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                    <Music className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <span className="font-medium text-slate-200 text-xs block">{track.title}</span>
-                    <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                      <span>{track.type}</span>
-                      <span>•</span>
-                      <span>{track.duration}</span>
-                      {track.ducked && (
+                    <button
+                      onClick={() => handleInsert(tmpl)}
+                      className={`w-full py-1.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all ${
+                        isJustInserted
+                          ? "bg-emerald-600 text-white"
+                          : "bg-white/5 hover:bg-[#3B63FF] hover:text-white text-slate-300"
+                      }`}
+                    >
+                      {isJustInserted ? (
                         <>
-                          <span>•</span>
-                          <span className="text-emerald-400 font-medium">Auto-ducked</span>
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Added to V2 Motion Track!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Insert to V2 Track at Playhead</span>
                         </>
                       )}
-                    </div>
+                    </button>
                   </div>
-                </div>
-                <button className="px-2 py-1 rounded bg-studio-800 hover:bg-emerald-600 text-slate-300 hover:text-white text-[10px] font-medium transition-colors">
-                  Add to A2
-                </button>
-              </div>
-            ))}
+                );
+              })}
+            </div>
           </div>
         )}
 
-        {/* 4. Stock B-Roll */}
-        {activeSubTab === "stock" && (
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { title: "Dilution Refrigerator Macro", source: "Pexels (Licensed)", dur: "06.5s" },
-              { title: "Quantum Qubit Waveform", source: "Pixabay (Licensed)", dur: "07.5s" },
-              { title: "Supercomputer Server Core", source: "Fal Flux (Generative)", dur: "05.0s" },
-              { title: "Deep Tech Lab Microchip", source: "Pexels (Licensed)", dur: "08.0s" },
-            ].map((stock, idx) => (
-              <div
-                key={idx}
-                className="p-2.5 bg-studio-950/80 hover:bg-studio-800 border border-studio-800 hover:border-cyan-500/50 rounded-lg cursor-pointer transition-all flex flex-col justify-between h-24"
-              >
-                <div className="flex justify-between items-center">
-                  <Film className="w-3.5 h-3.5 text-cyan-400" />
-                  <span className="text-[10px] font-mono text-slate-500">{stock.dur}</span>
+        {activeCategory === "luts" && (
+          <div className="space-y-3">
+            <div>
+              <h3 className="text-sm font-bold text-white">3D Color Cinema Looks</h3>
+              <p className="text-[11px] text-slate-400 mt-1">
+                One-click Hollywood color grading calibrated for high dynamic range YouTube footage.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              {luts.map((lut) => (
+                <div
+                  key={lut.name}
+                  onClick={() => onApplyLut(lut.name)}
+                  className="p-3 bg-[#10131b] rounded-xl border border-white/5 hover:border-[#3B63FF] cursor-pointer transition-all flex items-center justify-between"
+                >
+                  <div>
+                    <h4 className="text-xs font-bold text-white">{lut.name}</h4>
+                    <span className="text-[10px] text-slate-400">{lut.desc}</span>
+                  </div>
+                  <button className="px-2.5 py-1 rounded bg-[#3B63FF]/20 text-cyan-300 font-semibold text-[10px]">
+                    Apply Look
+                  </button>
                 </div>
-                <div>
-                  <span className="font-medium text-slate-200 text-[11px] block leading-tight truncate">{stock.title}</span>
-                  <span className="text-[9px] text-slate-500">{stock.source}</span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </div>

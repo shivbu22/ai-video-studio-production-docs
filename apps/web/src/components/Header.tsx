@@ -32,6 +32,7 @@ interface HeaderProps {
   onOpenProposals: () => void;
   hasPendingProposal: boolean;
   onExport: () => void;
+  onOpenConnections?: () => void;
   onToggleCopilot?: () => void;
   isCopilotOpen?: boolean;
 }
@@ -57,6 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProposals,
   hasPendingProposal,
   onExport,
+  onOpenConnections,
   onToggleCopilot,
   isCopilotOpen = false,
 }) => {
