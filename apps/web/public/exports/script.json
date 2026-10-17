@@ -1,0 +1,74 @@
+{
+  "scenes": [
+    {
+      "id": "scene_1",
+      "order": 1,
+      "hook": "Why are top creators ditching traditional video editors in 2026?",
+      "narration": "Traditional video production has hit a wall. In 2026, the real bottleneck isn't shooting footage\u2014it's manual editing and render times.",
+      "duration_sec": 12,
+      "template": "QuoteCard",
+      "props": {
+        "quote": "The bottleneck isn't shooting footage\u2014it's editing and render times.",
+        "author": "AI Video Studio"
+      }
+    },
+    {
+      "id": "scene_2",
+      "order": 2,
+      "hook": "The numbers tell the whole story.",
+      "narration": "Cloud compute costs for video models dropped by four hundred percent, while programmatic motion graphics render ten times faster.",
+      "duration_sec": 18,
+      "template": "BarChart",
+      "props": {
+        "title": "Rendering Speedup (x Realtime)",
+        "items": [
+          {
+            "label": "Legacy After Effects",
+            "value": 1,
+            "color": "#ef4444"
+          },
+          {
+            "label": "Desktop Claude Pack",
+            "value": 3,
+            "color": "#f59e0b"
+          },
+          {
+            "label": "Remotion Cloud Engine",
+            "value": 10,
+            "color": "#10b981"
+          }
+        ],
+        "unit": "x"
+      }
+    },
+    {
+      "id": "scene_3",
+      "order": 3,
+      "hook": "Desktop folder packs versus web platforms.",
+      "narration": "Slot Studio proved that creators want prompt-to-video. But locking it to an M-series Mac with ninety-minute renders leaves Windows and teams behind.",
+      "duration_sec": 20,
+      "template": "Comparison",
+      "props": {
+        "title": "Desktop Pack vs Web Studio",
+        "sideA": {
+          "title": "Desktop Claude Pack",
+          "points": [
+            "Mac only (M1+)",
+            "95 min local renders",
+            "Bring own Claude plan"
+          ],
+          "color": "#ef4444"
+        },
+        "sideB": {
+          "title": "AI Video Studio (Web)",
+          "points": [
+            "Works on any OS",
+            "Server render queue",
+            "1 Credit = 1 min render"
+          ],
+          "color": "#10b981"
+        }
+      }
+    }
+  ]
+}

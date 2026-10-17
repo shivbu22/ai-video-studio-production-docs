@@ -1,0 +1,17 @@
+{
+  "topic": "The Future of AI Video Production in 2026",
+  "claims": [
+    {
+      "claim": "AI video generation compute cost dropped by 4x between 2024 and 2026",
+      "source": "https://techcrunch.com/ai-compute-2026"
+    },
+    {
+      "claim": "Data-driven Remotion motion graphics render 10x faster than After Effects pipelines",
+      "source": "https://remotion.dev/blog"
+    },
+    {
+      "claim": "Multi-agent workflows over MCP reduce manual editing time by 80%",
+      "source": "https://modelcontextprotocol.io"
+    }
+  ]
+}
