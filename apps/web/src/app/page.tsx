@@ -19,7 +19,7 @@ import { TimelineToolbar, ToolMode } from "../components/Timeline/TimelineToolba
 import { TimelineRuler } from "../components/Timeline/TimelineRuler";
 import { TimelineCanvas, TimelineClip } from "../components/Timeline/TimelineCanvas";
 import { TrackConfig } from "../components/Timeline/TrackHeader";
-import { FileText, Sparkles, FolderKanban, Bot, Sliders } from "lucide-react";
+import { FileText, Sparkles, FolderKanban, Bot, Sliders, PanelLeftClose, PanelLeftOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { ColorGradingWorkspace } from "../components/Workspaces/ColorGradingWorkspace";
 import { AudioMixerWorkspace } from "../components/Workspaces/AudioMixerWorkspace";
 import { AIDirectorWorkspace } from "../components/Workspaces/AIDirectorWorkspace";
@@ -27,6 +27,7 @@ import { ResearchScriptWorkspace } from "../components/Workspaces/ResearchScript
 import { ClipFinderWorkspace } from "../components/Workspaces/ClipFinderWorkspace";
 import { VoiceCleanupWorkspace } from "../components/Workspaces/VoiceCleanupWorkspace";
 import { Remotion3DWorkspace } from "../components/Workspaces/Remotion3DWorkspace";
+import { CaptionsWorkspace } from "../components/Workspaces/CaptionsWorkspace";
 import { PublishingKitWorkspace } from "../components/Workspaces/PublishingKitWorkspace";
 import { ClaudeAICopilotDrawer } from "../components/ClaudeAICopilotDrawer";
 
@@ -103,14 +104,36 @@ export default function StudioEditorPage() {
   const [projectTitle, setProjectTitle] = useState("Quantum Supremacy 2026");
 
   const handleSelectProjectPreset = (presetId: string) => {
+    pushHistory();
     if (presetId === "quantum") {
       setProjectTitle("Quantum Supremacy 2026");
+      setClips(INITIAL_CLIPS);
       showToast("Loaded Project: Quantum Supremacy 2026 (Nature 2019)");
     } else if (presetId === "hypertrophy") {
       setProjectTitle("Back Hypertrophy: Rows vs Pullups");
+      setClips([
+        { id: "c_v3_1", trackId: "v3", title: "Dynamic Hormozi Captions", startMs: 0, durationMs: 14000, colorClass: "bg-purple-600/35 text-purple-200", borderClass: "border-purple-500/60", type: "captions" },
+        { id: "c_v2_1", trackId: "v2", title: "3D Paper Lift-Off: Schoenfeld 2021", startMs: 2000, durationMs: 5000, colorClass: "bg-amber-600/40 text-amber-200", borderClass: "border-amber-500/60", type: "motion" },
+        { id: "c_v2_2", trackId: "v2", title: "BarChart: 118% Motor Unit EMG", startMs: 7500, durationMs: 4500, colorClass: "bg-indigo-600/40 text-indigo-200", borderClass: "border-indigo-500/60", type: "motion" },
+        { id: "c_v1_1", trackId: "v1", title: "Scene 1: Jeff Nippard Barbell Row (4K)", startMs: 0, durationMs: 4000, colorClass: "bg-blue-600/35 text-blue-200", borderClass: "border-blue-500/50", type: "video" },
+        { id: "c_v1_2", trackId: "v1", title: "Scene 2: Anatomical Lat Vector Macro", startMs: 4000, durationMs: 5000, colorClass: "bg-blue-600/35 text-blue-200", borderClass: "border-blue-500/50", type: "video" },
+        { id: "c_v1_3", trackId: "v1", title: "Scene 3: Iliac Crest Pull Technique", startMs: 9000, durationMs: 5000, colorClass: "bg-blue-600/35 text-blue-200", borderClass: "border-blue-500/50", type: "video" },
+        { id: "c_a1_1", trackId: "a1", title: "Voiceover (AI Voice): voice_clean.wav", startMs: 0, durationMs: 14000, colorClass: "bg-emerald-600/35 text-emerald-200", borderClass: "border-emerald-500/50", type: "audio", waveform: true },
+        { id: "c_a2_1", trackId: "a2", title: "Heavy Phonk Gym Drive (-14dB Ducked)", startMs: 0, durationMs: 15000, colorClass: "bg-teal-600/30 text-teal-200", borderClass: "border-teal-500/40", type: "audio", ducked: true },
+      ]);
       showToast("Loaded Project: Back Hypertrophy (Schoenfeld 2021)");
     } else if (presetId === "agents") {
       setProjectTitle("Autonomous AI Video Editors 2026");
+      setClips([
+        { id: "c_v3_1", trackId: "v3", title: "Dynamic Neon Subtitles", startMs: 0, durationMs: 14000, colorClass: "bg-purple-600/35 text-purple-200", borderClass: "border-purple-500/60", type: "captions" },
+        { id: "c_v2_1", trackId: "v2", title: "Exploded 3D Pipeline Layers", startMs: 1500, durationMs: 5500, colorClass: "bg-indigo-600/40 text-indigo-200", borderClass: "border-indigo-500/60", type: "motion" },
+        { id: "c_v2_2", trackId: "v2", title: "StatCounter: 10 Stages Autonomy", startMs: 7500, durationMs: 5000, colorClass: "bg-cyan-600/40 text-cyan-200", borderClass: "border-cyan-500/60", type: "motion" },
+        { id: "c_v1_1", trackId: "v1", title: "Scene 1: Web Workstation NLE UI", startMs: 0, durationMs: 4500, colorClass: "bg-blue-600/35 text-blue-200", borderClass: "border-blue-500/50", type: "video" },
+        { id: "c_v1_2", trackId: "v1", title: "Scene 2: Remotion Headless Cluster", startMs: 4500, durationMs: 5000, colorClass: "bg-blue-600/35 text-blue-200", borderClass: "border-blue-500/50", type: "video" },
+        { id: "c_v1_3", trackId: "v1", title: "Scene 3: MCP Agent Direct Command", startMs: 9500, durationMs: 4500, colorClass: "bg-blue-600/35 text-blue-200", borderClass: "border-blue-500/50", type: "video" },
+        { id: "c_a1_1", trackId: "a1", title: "Voiceover (AI Voice): voice_clean.wav", startMs: 0, durationMs: 14000, colorClass: "bg-emerald-600/35 text-emerald-200", borderClass: "border-emerald-500/50", type: "audio", waveform: true },
+        { id: "c_a2_1", trackId: "a2", title: "Deep Cyber Ambient (-14dB Ducked)", startMs: 0, durationMs: 15000, colorClass: "bg-teal-600/30 text-teal-200", borderClass: "border-teal-500/40", type: "audio", ducked: true },
+      ]);
       showToast("Loaded Project: Autonomous AI Video Editors (Route B)");
     }
   };
@@ -130,7 +153,8 @@ export default function StudioEditorPage() {
   const [tracks, setTracks] = useState<TrackConfig[]>(INITIAL_TRACKS);
   const [clips, setClips] = useState<TimelineClip[]>(INITIAL_CLIPS);
   const [selectedClipId, setSelectedClipId] = useState<string | null>("c_v1_1");
-  const [showInspector, setShowInspector] = useState(true);
+  const [showInspector, setShowInspector] = useState(false);
+  const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
   const [toolMode, setToolMode] = useState<ToolMode>("select");
   const [snapping, setSnapping] = useState(true);
   const [inPointMs, setInPointMs] = useState<number | null>(1000);
@@ -470,10 +494,123 @@ export default function StudioEditorPage() {
   };
 
   // 1-Prompt Autonomous Video Generator Callback
-  const handleOnePromptGenerate = (brief: { topic: string; durationSec: number; stylePreset: string }) => {
+  const handleOnePromptGenerate = (brief: { 
+    topic: string; 
+    durationSec: number; 
+    stylePreset: string;
+    narrator?: string;
+  }) => {
     pushHistory();
-    setTotalDurationMs(brief.durationSec * 1000);
-    showToast(`✨ Generated autonomous video for '${brief.topic.slice(0, 30)}...'`);
+    const dur = brief.durationSec * 1000;
+    setTotalDurationMs(dur);
+    setProjectTitle(brief.topic);
+
+    // Calculate dynamic scene durations
+    const sceneDur = Math.floor(dur / 4);
+
+    const generatedClips: TimelineClip[] = [
+      // C1 Kinetic Captions
+      { 
+        id: `gen_c1_${Date.now()}`, 
+        trackId: "v3", 
+        title: `Kinetic Captions (${brief.stylePreset.toUpperCase()})`, 
+        startMs: 0, 
+        durationMs: dur, 
+        colorClass: "bg-purple-600/35 text-purple-200", 
+        borderClass: "border-purple-500/60", 
+        type: "captions" 
+      },
+      // V2 Motion FX
+      { 
+        id: `gen_v2_1_${Date.now()}`, 
+        trackId: "v2", 
+        title: `Remotion 3D: Empirical Data Chart`, 
+        startMs: Math.floor(sceneDur * 0.8), 
+        durationMs: Math.floor(sceneDur * 1.2), 
+        colorClass: "bg-indigo-600/40 text-indigo-200", 
+        borderClass: "border-indigo-500/60", 
+        type: "motion" 
+      },
+      { 
+        id: `gen_v2_2_${Date.now()}`, 
+        trackId: "v2", 
+        title: `Remotion 3D: Research Paper Citation`, 
+        startMs: Math.floor(sceneDur * 2.3), 
+        durationMs: Math.floor(sceneDur * 1.1), 
+        colorClass: "bg-indigo-600/40 text-indigo-200", 
+        borderClass: "border-indigo-500/60", 
+        type: "motion" 
+      },
+      // V1 Master Video B-Roll
+      { 
+        id: `gen_v1_1_${Date.now()}`, 
+        trackId: "v1", 
+        title: `Scene 1: Hook (${brief.topic.slice(0, 20)})`, 
+        startMs: 0, 
+        durationMs: sceneDur, 
+        colorClass: "bg-blue-600/35 text-blue-200", 
+        borderClass: "border-blue-500/50", 
+        type: "video" 
+      },
+      { 
+        id: `gen_v1_2_${Date.now()}`, 
+        trackId: "v1", 
+        title: `Scene 2: Conflict & Paradox`, 
+        startMs: sceneDur, 
+        durationMs: sceneDur, 
+        colorClass: "bg-blue-600/35 text-blue-200", 
+        borderClass: "border-blue-500/50", 
+        type: "video" 
+      },
+      { 
+        id: `gen_v1_3_${Date.now()}`, 
+        trackId: "v1", 
+        title: `Scene 3: Deep Investigation`, 
+        startMs: sceneDur * 2, 
+        durationMs: sceneDur, 
+        colorClass: "bg-blue-600/35 text-blue-200", 
+        borderClass: "border-blue-500/50", 
+        type: "video" 
+      },
+      { 
+        id: `gen_v1_4_${Date.now()}`, 
+        trackId: "v1", 
+        title: `Scene 4: Resolution & Conclusion`, 
+        startMs: sceneDur * 3, 
+        durationMs: dur - (sceneDur * 3), 
+        colorClass: "bg-blue-600/35 text-blue-200", 
+        borderClass: "border-blue-500/50", 
+        type: "video" 
+      },
+      // A1 Clean Voiceover
+      { 
+        id: `gen_a1_1_${Date.now()}`, 
+        trackId: "a1", 
+        title: `Voiceover (AI Voice): voice_clean.wav`, 
+        startMs: 0, 
+        durationMs: dur, 
+        colorClass: "bg-emerald-600/35 text-emerald-200", 
+        borderClass: "border-emerald-500/50", 
+        type: "audio", 
+        waveform: true 
+      },
+      // A2 Background Music Ducked
+      { 
+        id: `gen_a2_1_${Date.now()}`, 
+        trackId: "a2", 
+        title: `Soundtrack Bed (-14dB Ducked under Speech)`, 
+        startMs: 0, 
+        durationMs: dur + 1500, 
+        colorClass: "bg-teal-600/30 text-teal-200", 
+        borderClass: "border-teal-500/40", 
+        type: "audio", 
+        ducked: true 
+      },
+    ];
+
+    setClips(generatedClips);
+    setActiveWorkspace("edit");
+    showToast(`✨ Generated autonomous video for '${brief.topic}' (${brief.durationSec}s)!`);
   };
 
   // Master Render Export (100% Free & Unmetered)
@@ -601,6 +738,7 @@ export default function StudioEditorPage() {
         {activeWorkspace === "cleanup" && (
           <VoiceCleanupWorkspace
             onApplyCleanAudio={handleApplyCleanVoice}
+            onShowToast={showToast}
           />
         )}
 
@@ -610,6 +748,37 @@ export default function StudioEditorPage() {
               handleInsertTemplate(templateName as any);
               showToast(`Remotion 3D template added: ${templateName}`);
             }}
+            onShowToast={showToast}
+          />
+        )}
+
+        {activeWorkspace === "captions" && (
+          <CaptionsWorkspace
+            currentTimeMs={currentTimeMs}
+            totalDurationMs={totalDurationMs}
+            isPlaying={isPlaying}
+            onTogglePlay={() => setIsPlaying(!isPlaying)}
+            onSeek={setCurrentTimeMs}
+            aspectRatio={aspectRatio}
+            onAspectRatioChange={setAspectRatio}
+            onInsertCaptionsToTimeline={(segments) => {
+              setClips((prev) => {
+                const nonCaptions = prev.filter((c) => c.trackId !== "v3");
+                const newCaptions: TimelineClip[] = segments.map((seg, idx) => ({
+                  id: `cap_${idx}_${Date.now()}`,
+                  trackId: "v3",
+                  title: `Caption: "${seg.text.slice(0, 22)}..."`,
+                  startMs: seg.startMs,
+                  durationMs: seg.endMs - seg.startMs,
+                  colorClass: "bg-purple-600/35 text-purple-200",
+                  borderClass: "border-purple-500/60",
+                  type: "captions",
+                }));
+                return [...nonCaptions, ...newCaptions];
+              });
+              showToast("✨ Applied kinetic word-by-word captions to timeline!");
+            }}
+            onShowToast={showToast}
           />
         )}
 
@@ -657,128 +826,133 @@ export default function StudioEditorPage() {
 
         {activeWorkspace === "edit" && (
           <>
-            {/* Left Side: Multi-Tab Panel */}
-            <div className="w-[400px] bg-studio-900 border-r border-studio-800 flex flex-col flex-shrink-0">
-              {/* Tab Selector Header (Slot Studio 5-Pillar Tabs) */}
-              <div className="h-10 bg-[#05060a] border-b border-white/5 px-2 flex items-center gap-1 select-none text-xs overflow-x-auto">
-                <button
-                  onClick={() => setLeftTab("youtube")}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-t text-xs font-bold border-b-2 transition-all ${
-                    leftTab === "youtube"
-                      ? "border-[#3B63FF] text-white bg-[#0a0c12]"
-                      : "border-transparent text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  <span className="text-[#3B63FF]">▶</span>
-                  <span>YouTube Clips</span>
-                </button>
-                <button
-                  onClick={() => setLeftTab("voice")}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-t text-xs font-bold border-b-2 transition-all ${
-                    leftTab === "voice"
-                      ? "border-[#3B63FF] text-white bg-[#0a0c12]"
-                      : "border-transparent text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  <span className="text-emerald-400">🎙</span>
-                  <span>Voice Clean</span>
-                </button>
-                <button
-                  onClick={() => setLeftTab("script")}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-t text-xs font-bold border-b-2 transition-all ${
-                    leftTab === "script"
-                      ? "border-[#3B63FF] text-white bg-[#0a0c12]"
-                      : "border-transparent text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Script & Facts</span>
-                </button>
-                <button
-                  onClick={() => setLeftTab("assets")}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-t text-xs font-bold border-b-2 transition-all ${
-                    leftTab === "assets"
-                      ? "border-[#3B63FF] text-white bg-[#0a0c12]"
-                      : "border-transparent text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  <FolderKanban className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Motion FX</span>
-                </button>
-                <button
-                  onClick={() => setLeftTab("transcript")}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-t text-xs font-bold border-b-2 transition-all ${
-                    leftTab === "transcript"
-                      ? "border-[#3B63FF] text-white bg-[#0a0c12]"
-                      : "border-transparent text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  <FileText className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Transcript</span>
-                </button>
-                <button
-                  onClick={() => setLeftTab("proposals")}
-                  className={`flex items-center gap-1.5 px-2 py-1.5 rounded-t text-xs font-bold border-b-2 transition-all relative ${
-                    leftTab === "proposals"
-                      ? "border-[#3B63FF] text-white bg-[#0a0c12]"
-                      : "border-transparent text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  <Bot className="w-3.5 h-3.5 text-[#3B63FF]" />
-                  <span>MCP AI</span>
-                  {proposals.length > 0 && (
-                    <span className="w-2 h-2 rounded-full bg-amber-400" />
-                  )}
-                </button>
+            {/* Left Side: Sleek Media & Asset Bin */}
+            <div className={`${isLeftPanelOpen ? "w-[340px]" : "w-8"} bg-[#0d0e13] border-r border-[#1a1c24] flex flex-col flex-shrink-0 transition-all duration-150 overflow-hidden`}>
+              {/* Minimalist Tab Strip & Collapse Toggle */}
+              <div className="h-8 bg-[#111217] border-b border-[#1c1e27] px-2 flex items-center justify-between select-none text-[11px] overflow-hidden">
+                {isLeftPanelOpen ? (
+                  <>
+                    <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+                      <button
+                        onClick={() => setLeftTab("youtube")}
+                        className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors whitespace-nowrap ${
+                          leftTab === "youtube" ? "text-white bg-[#252836] font-semibold" : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        Clips
+                      </button>
+                      <button
+                        onClick={() => setLeftTab("assets")}
+                        className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors whitespace-nowrap ${
+                          leftTab === "assets" ? "text-white bg-[#252836] font-semibold" : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        Motion
+                      </button>
+                      <button
+                        onClick={() => setLeftTab("script")}
+                        className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                          leftTab === "script" ? "text-white bg-[#222430] font-semibold" : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        Script
+                      </button>
+                      <button
+                        onClick={() => setLeftTab("voice")}
+                        className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                          leftTab === "voice" ? "text-white bg-[#222430] font-semibold" : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        Voice
+                      </button>
+                      <button
+                        onClick={() => setLeftTab("transcript")}
+                        className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                          leftTab === "transcript" ? "text-white bg-[#222430] font-semibold" : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        Text
+                      </button>
+                      <button
+                        onClick={() => setLeftTab("proposals")}
+                        className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors relative ${
+                          leftTab === "proposals" ? "text-white bg-[#222430] font-semibold" : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        <span>Agent</span>
+                        {proposals.length > 0 && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block ml-1" />
+                        )}
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => setIsLeftPanelOpen(false)}
+                      className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-white/5"
+                      title="Collapse Bin (Zen Mode)"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setIsLeftPanelOpen(true)}
+                    className="w-full h-full flex items-center justify-center text-slate-400 hover:text-white"
+                    title="Expand Media Bin"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
 
-              {/* Active Tab Content */}
-              <div className="flex-1 overflow-hidden">
-                {leftTab === "youtube" && (
-                  <YouTubeClipFinder onInsertClip={handleInsertYouTubeClip} />
-                )}
-                {leftTab === "voice" && (
-                  <VoiceCleanStation onApplyVoice={handleApplyCleanVoice} />
-                )}
-                {leftTab === "transcript" && (
-                  <TranscriptEditor
-                    words={words}
-                    currentTimeMs={currentTimeMs}
-                    onSeek={setCurrentTimeMs}
-                    onDeleteWord={handleDeleteWord}
-                    onRemoveSilences={handleRemoveSilences}
-                  />
-                )}
-                {leftTab === "script" && (
-                  <ScriptPanel
-                    scenes={[
-                      { id: "s1", order: 1, type: "hook", narration: "In October 2019, Google demonstrated quantum supremacy.", visualIntent: "Macro dilution refrigerator", template: "BarChart", durationSec: 4 },
-                      { id: "s2", order: 2, type: "body", narration: "Their Sycamore processor performed a calculation in 200 seconds.", visualIntent: "Speed comparison graph", template: "StatCounter", durationSec: 6 },
-                      { id: "s3", order: 3, type: "cta", narration: "Subscribe for deep tech breakdowns.", visualIntent: "Channel branding end screen", template: "QuoteCard", durationSec: 4 },
-                    ]}
-                    claims={[
-                      { fact: "Google Sycamore solved task in 200s vs Summit 10,000 years", sourceUrl: "https://www.nature.com/articles/s41586-019-1666-5" },
-                      { fact: "Qubit state maintains coherent superposition at 15 mK", sourceUrl: "https://arxiv.org/abs/1910.11333" }
-                    ]}
-                    activeSceneId="s1"
-                    onSelectScene={(id) => setCurrentTimeMs(id === "s1" ? 0 : id === "s2" ? 4000 : 10000)}
-                  />
-                )}
-                {leftTab === "assets" && (
-                  <AssetBin
-                    onInsertTemplate={handleInsertTemplate}
-                    onApplyLut={handleApplyLut}
-                    onUploadMedia={() => showToast("Upload dialog: Presigned R2 direct transfer initialized.")}
-                  />
-                )}
-                {leftTab === "proposals" && (
-                  <ProposalReview
-                    proposals={proposals}
-                    onApprove={handleApproveProposal}
-                    onReject={handleRejectProposal}
-                  />
-                )}
-              </div>
+              {/* Active Tab Content (Hidden if collapsed) */}
+              {isLeftPanelOpen && (
+                <div className="flex-1 overflow-hidden">
+                  {leftTab === "youtube" && (
+                    <YouTubeClipFinder onInsertClip={handleInsertYouTubeClip} />
+                  )}
+                  {leftTab === "voice" && (
+                    <VoiceCleanStation onApplyVoice={handleApplyCleanVoice} />
+                  )}
+                  {leftTab === "transcript" && (
+                    <TranscriptEditor
+                      words={words}
+                      currentTimeMs={currentTimeMs}
+                      onSeek={setCurrentTimeMs}
+                      onDeleteWord={handleDeleteWord}
+                      onRemoveSilences={handleRemoveSilences}
+                    />
+                  )}
+                  {leftTab === "script" && (
+                    <ScriptPanel
+                      scenes={[
+                        { id: "s1", order: 1, type: "hook", narration: "In October 2019, Google demonstrated quantum supremacy.", visualIntent: "Macro dilution refrigerator", template: "BarChart", durationSec: 4 },
+                        { id: "s2", order: 2, type: "body", narration: "Their Sycamore processor performed a calculation in 200 seconds.", visualIntent: "Speed comparison graph", template: "StatCounter", durationSec: 6 },
+                        { id: "s3", order: 3, type: "cta", narration: "Subscribe for deep tech breakdowns.", visualIntent: "Channel branding end screen", template: "QuoteCard", durationSec: 4 },
+                      ]}
+                      claims={[
+                        { fact: "Google Sycamore solved task in 200s vs Summit 10,000 years", sourceUrl: "https://www.nature.com/articles/s41586-019-1666-5" },
+                        { fact: "Qubit state maintains coherent superposition at 15 mK", sourceUrl: "https://arxiv.org/abs/1910.11333" }
+                      ]}
+                      activeSceneId="s1"
+                      onSelectScene={(id) => setCurrentTimeMs(id === "s1" ? 0 : id === "s2" ? 4000 : 10000)}
+                    />
+                  )}
+                  {leftTab === "assets" && (
+                    <AssetBin
+                      onInsertTemplate={handleInsertTemplate}
+                      onApplyLut={handleApplyLut}
+                      onUploadMedia={() => showToast("Upload dialog: Presigned R2 direct transfer initialized.")}
+                    />
+                  )}
+                  {leftTab === "proposals" && (
+                    <ProposalReview
+                      proposals={proposals}
+                      onApprove={handleApproveProposal}
+                      onReject={handleRejectProposal}
+                    />
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Center: Program Monitor */}
@@ -791,10 +965,12 @@ export default function StudioEditorPage() {
                 onSeek={setCurrentTimeMs}
                 aspectRatio={aspectRatio}
                 onAspectRatioChange={setAspectRatio}
-                currentSceneTitle="Quantum Supremacy Benchmark"
+                currentSceneTitle={selectedClip ? selectedClip.title : projectTitle}
                 currentTemplateName="BarChart"
                 activeLut={activeLut}
                 activeClip={selectedClip}
+                showInspector={showInspector}
+                onToggleInspector={() => setShowInspector(!showInspector)}
               />
 
               {/* Right Clip Inspector Panel */}
@@ -926,40 +1102,17 @@ export default function StudioEditorPage() {
         onClose={() => setIsCopilotOpen(false)}
       />
 
-      {/* 8. Telemetry Footer Bar (Google Stitch Studio Pro Specs) */}
-      <footer className="h-6 bg-[#07090e] border-t border-slate-800/80 px-4 flex items-center justify-between text-[11px] font-mono text-slate-400 z-40 shrink-0 select-none">
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>REMOTE GPU: NVIDIA RTX 4090 (24GB VRAM - 42% ALLOCATED)</span>
+      {/* 8. Sleek Status Footer */}
+      <footer className="h-5 bg-[#090a0d] border-t border-[#1a1c24] px-3 flex items-center justify-between text-[10px] font-mono text-slate-500 z-40 shrink-0 select-none">
+        <div className="flex items-center gap-2.5">
+          <span className="flex items-center gap-1.5 text-slate-300 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span>4K Ready · NVIDIA RTX 4090 · 2.1ms</span>
           </span>
-          <span className="text-slate-600 hidden sm:inline">|</span>
-          <span className="hidden sm:inline">AUDIO LATENCY: 2.1ms</span>
-          <span className="text-slate-600 hidden md:inline">|</span>
-          <span className="hidden md:inline">BUFFER CACHE: 9.8 GB / 32 GB</span>
-          {activeWorkspace !== "edit" && (
-            <>
-              <span className="text-slate-600">|</span>
-              <button
-                onClick={() => setIsTimelineDocked(!isTimelineDocked)}
-                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] transition-colors ${
-                  isTimelineDocked
-                    ? "bg-violet-600 text-white font-bold"
-                    : "bg-slate-800/80 hover:bg-slate-700 text-slate-300"
-                }`}
-              >
-                <span>{isTimelineDocked ? "▾ Hide Timeline Dock" : "▴ Show Timeline Dock"}</span>
-              </button>
-            </>
-          )}
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-cyan-400">REMOTION BUNDLER v4.1.8</span>
-          <span className="text-slate-300 hidden sm:inline">RENDER PROGRESS: 100% READY</span>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-violet-400"></span>
-            <span className="text-slate-200 font-bold">ONLINE</span>
-          </div>
+          <span>Remotion v4.1.8 · Broadcast Safe -14.0 LUFS</span>
+          <span className="text-slate-400">30.00 FPS</span>
         </div>
       </footer>
 

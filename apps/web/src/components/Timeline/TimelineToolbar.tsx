@@ -9,19 +9,13 @@ import {
   ZoomOut, 
   Undo2, 
   Redo2, 
-  Split,
-  Trash2,
-  ArrowRightToLine,
-  MoveHorizontal,
-  Move,
-  PenTool,
-  Hand,
-  Search,
-  Bookmark,
-  FastForward,
-  Play,
-  Pause,
-  RotateCcw
+  Split, 
+  Trash2, 
+  ArrowRightToLine, 
+  MoveHorizontal, 
+  PenTool, 
+  Hand, 
+  Bookmark
 } from "lucide-react";
 
 export type ToolMode = "select" | "trackSelect" | "ripple" | "razor" | "slip" | "pen" | "hand" | "zoom";
@@ -31,7 +25,7 @@ interface TimelineToolbarProps {
   onToolModeChange: (mode: ToolMode) => void;
   snapping: boolean;
   onToggleSnapping: () => void;
-  zoomScale: number; // pixels per second
+  zoomScale: number;
   onZoomChange: (scale: number) => void;
   canUndo: boolean;
   canRedo: boolean;
@@ -72,249 +66,184 @@ export const TimelineToolbar: React.FC<TimelineToolbarProps> = ({
   shuttleSpeed = 0,
 }) => {
   return (
-    <div className="h-9 bg-[#16171b] border-y border-[#262830] px-2.5 flex items-center justify-between select-none text-xs text-slate-300 font-sans">
-      {/* 1. Premiere Pro 8-Tool Palette */}
+    <div className="h-8 bg-[#13141a] border-y border-[#21232e] px-2.5 flex items-center justify-between select-none text-xs text-slate-300 font-sans">
+      {/* 1. Left: 8-Tool Palette */}
       <div className="flex items-center gap-0.5">
-        {/* Selection Tool (V) */}
         <button
           onClick={() => onToolModeChange("select")}
-          title="Selection Tool (V) — Select and move clips"
-          className={`h-7 px-2 rounded-[2px] transition-all flex items-center gap-1 font-medium ${
-            toolMode === "select"
-              ? "bg-[#3B63FF] text-white shadow-sm"
-              : "text-slate-400 hover:text-white hover:bg-white/5"
+          title="Selection Tool (V)"
+          className={`h-6 px-1.5 rounded transition-colors flex items-center gap-1 ${
+            toolMode === "select" ? "bg-[#3B63FF] text-white" : "text-slate-400 hover:text-white hover:bg-white/5"
           }`}
         >
           <Pointer className="w-3.5 h-3.5" />
           <span className="text-[10px] font-mono opacity-80">V</span>
         </button>
 
-        {/* Track Select Forward Tool (A) */}
         <button
           onClick={() => onToolModeChange("trackSelect")}
-          title="Track Select Forward Tool (A) — Select all clips to the right"
-          className={`h-7 px-2 rounded-[2px] transition-all flex items-center gap-1 font-medium ${
-            toolMode === "trackSelect"
-              ? "bg-[#3B63FF] text-white shadow-sm"
-              : "text-slate-400 hover:text-white hover:bg-white/5"
+          title="Track Select Forward (A)"
+          className={`h-6 px-1.5 rounded transition-colors flex items-center gap-1 ${
+            toolMode === "trackSelect" ? "bg-[#3B63FF] text-white" : "text-slate-400 hover:text-white hover:bg-white/5"
           }`}
         >
           <ArrowRightToLine className="w-3.5 h-3.5" />
           <span className="text-[10px] font-mono opacity-80">A</span>
         </button>
 
-        {/* Ripple Edit Tool (B) */}
         <button
           onClick={() => onToolModeChange("ripple")}
-          title="Ripple Edit Tool (B) — Trim and close timeline gap"
-          className={`h-7 px-2 rounded-[2px] transition-all flex items-center gap-1 font-medium ${
-            toolMode === "ripple"
-              ? "bg-[#3B63FF] text-white shadow-sm"
-              : "text-slate-400 hover:text-white hover:bg-white/5"
+          title="Ripple Edit Tool (B)"
+          className={`h-6 px-1.5 rounded transition-colors flex items-center gap-1 ${
+            toolMode === "ripple" ? "bg-[#3B63FF] text-white" : "text-slate-400 hover:text-white hover:bg-white/5"
           }`}
         >
           <MoveHorizontal className="w-3.5 h-3.5" />
           <span className="text-[10px] font-mono opacity-80">B</span>
         </button>
 
-        {/* Razor Blade Tool (C) */}
         <button
           onClick={() => onToolModeChange("razor")}
-          title="Razor Blade Tool (C) — Split clip at cursor"
-          className={`h-7 px-2 rounded-[2px] transition-all flex items-center gap-1 font-medium ${
-            toolMode === "razor"
-              ? "bg-[#3B63FF] text-white shadow-sm"
-              : "text-slate-400 hover:text-white hover:bg-white/5"
+          title="Razor Blade Tool (C)"
+          className={`h-6 px-1.5 rounded transition-colors flex items-center gap-1 ${
+            toolMode === "razor" ? "bg-[#3B63FF] text-white" : "text-slate-400 hover:text-white hover:bg-white/5"
           }`}
         >
           <Scissors className="w-3.5 h-3.5" />
           <span className="text-[10px] font-mono opacity-80">C</span>
         </button>
 
-        {/* Slip Tool (Y) */}
-        <button
-          onClick={() => onToolModeChange("slip")}
-          title="Slip Tool (Y) — Slip clip in/out range without moving position"
-          className={`h-7 px-2 rounded-[2px] transition-all flex items-center gap-1 font-medium ${
-            toolMode === "slip"
-              ? "bg-[#3B63FF] text-white shadow-sm"
-              : "text-slate-400 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          <Move className="w-3.5 h-3.5" />
-          <span className="text-[10px] font-mono opacity-80">Y</span>
-        </button>
-
-        {/* Pen Keyframe Tool (P) */}
         <button
           onClick={() => onToolModeChange("pen")}
-          title="Pen Tool (P) — Add volume rubberband & opacity keyframes"
-          className={`h-7 px-2 rounded-[2px] transition-all flex items-center gap-1 font-medium ${
-            toolMode === "pen"
-              ? "bg-[#3B63FF] text-white shadow-sm"
-              : "text-slate-400 hover:text-white hover:bg-white/5"
+          title="Pen Tool (P)"
+          className={`h-6 px-1.5 rounded transition-colors flex items-center gap-1 ${
+            toolMode === "pen" ? "bg-[#3B63FF] text-white" : "text-slate-400 hover:text-white hover:bg-white/5"
           }`}
         >
           <PenTool className="w-3.5 h-3.5" />
           <span className="text-[10px] font-mono opacity-80">P</span>
         </button>
 
-        {/* Hand Tool (H) */}
         <button
           onClick={() => onToolModeChange("hand")}
-          title="Hand Tool (H) — Pan timeline view"
-          className={`h-7 px-1.5 rounded-[2px] transition-all flex items-center ${
-            toolMode === "hand"
-              ? "bg-[#3B63FF] text-white"
-              : "text-slate-400 hover:text-white hover:bg-white/5"
+          title="Hand Tool (H)"
+          className={`h-6 px-1.5 rounded transition-colors flex items-center gap-1 ${
+            toolMode === "hand" ? "bg-[#3B63FF] text-white" : "text-slate-400 hover:text-white hover:bg-white/5"
           }`}
         >
           <Hand className="w-3.5 h-3.5" />
+          <span className="text-[10px] font-mono opacity-80">H</span>
         </button>
 
-        <div className="h-4 w-[1px] bg-[#2b2e36] mx-1" />
+        <div className="h-3.5 w-[1px] bg-white/10 mx-1" />
 
-        {/* Razor Split at Playhead */}
+        {/* Quick Cut & Delete */}
         <button
           onClick={onSplitAtPlayhead}
-          title="Split at Playhead (Ctrl+K / Cmd+K)"
-          className="h-7 px-2 rounded-[2px] text-slate-300 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-1 border border-[#2b2e36]"
+          title="Split at playhead (S)"
+          className="h-6 px-2 rounded bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white flex items-center gap-1 text-[11px] font-medium"
         >
           <Split className="w-3 h-3 text-cyan-400" />
-          <span className="text-[10px] font-mono font-semibold">Split</span>
+          <span>Split</span>
         </button>
 
-        {/* Snapping Magnet (S) */}
         <button
-          onClick={onToggleSnapping}
-          title="Toggle Snap to Clips & Playhead (S)"
-          className={`h-7 px-2 rounded-[2px] transition-all flex items-center gap-1 ${
-            snapping
-              ? "bg-amber-500/15 text-amber-300 border border-amber-500/40"
-              : "text-slate-400 hover:text-white hover:bg-white/5"
-          }`}
+          onClick={onDeleteSelected}
+          disabled={!hasSelection}
+          title="Delete selected (Del)"
+          className="h-6 px-1.5 rounded text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 disabled:opacity-30 disabled:pointer-events-none"
         >
-          <Magnet className="w-3 h-3" />
-          <span className="text-[10px] font-semibold">Snap</span>
+          <Trash2 className="w-3.5 h-3.5" />
         </button>
+      </div>
 
-        {/* Markers */}
-        {onAddMarker && (
+      {/* 2. Center: Work Area In/Out & Markers */}
+      <div className="flex items-center gap-1">
+        <button
+          onClick={onSetInPoint}
+          className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/5 hover:bg-white/10 text-slate-300"
+          title="Mark In Point (I)"
+        >
+          In
+        </button>
+        <button
+          onClick={onSetOutPoint}
+          className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/5 hover:bg-white/10 text-slate-300"
+          title="Mark Out Point (O)"
+        >
+          Out
+        </button>
+        {(inPointMs !== null || outPointMs !== null) && (
           <button
-            onClick={onAddMarker}
-            title="Add Timeline Marker at Playhead (M)"
-            className="h-7 px-2 rounded-[2px] text-slate-400 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-1"
+            onClick={onClearInOut}
+            className="px-1.5 py-0.5 rounded text-[10px] text-slate-400 hover:text-white"
+            title="Clear In/Out (Alt+X)"
           >
-            <Bookmark className="w-3 h-3 text-cyan-400" />
-            <span className="text-[10px] font-mono">Marker</span>
+            Clear
           </button>
         )}
+        <button
+          onClick={onAddMarker}
+          className="p-1 rounded text-slate-400 hover:text-amber-300 hover:bg-white/5"
+          title="Add Marker (M)"
+        >
+          <Bookmark className="w-3 h-3" />
+        </button>
 
-        {/* In / Out Work Area Controls */}
-        <div className="flex items-center gap-0.5 ml-1 border-l border-[#2b2e36] pl-1.5">
-          {onSetInPoint && (
-            <button
-              onClick={onSetInPoint}
-              title="Mark In Point (I)"
-              className="h-6 px-1.5 rounded-[2px] bg-[#1f2229] hover:bg-[#282c35] text-[10px] font-mono font-bold text-slate-300 border border-[#2e323c]"
-            >
-              [ I
-            </button>
-          )}
-          {onSetOutPoint && (
-            <button
-              onClick={onSetOutPoint}
-              title="Mark Out Point (O)"
-              className="h-6 px-1.5 rounded-[2px] bg-[#1f2229] hover:bg-[#282c35] text-[10px] font-mono font-bold text-slate-300 border border-[#2e323c]"
-            >
-              O ]
-            </button>
-          )}
-          {onClearInOut && (inPointMs !== null || outPointMs !== null) && (
-            <button
-              onClick={onClearInOut}
-              title="Clear In/Out Marks (Alt+X)"
-              className="h-6 px-1.5 rounded-[2px] text-[10px] font-mono text-slate-400 hover:text-rose-400"
-            >
-              <RotateCcw className="w-2.5 h-2.5" />
-            </button>
-          )}
-        </div>
-
-        {hasSelection && (
-          <button
-            onClick={onDeleteSelected}
-            title="Ripple Delete Selected Clip (Del / Backspace)"
-            className="h-7 px-2 rounded-[2px] bg-rose-950/40 text-rose-300 border border-rose-800/40 hover:bg-rose-900/60 transition-colors flex items-center gap-1 ml-1"
-          >
-            <Trash2 className="w-3 h-3" />
-            <span className="text-[10px]">Delete</span>
-          </button>
+        {shuttleSpeed !== 0 && (
+          <span className="text-[10px] font-mono text-[#3B63FF] bg-[#3B63FF]/10 px-1.5 py-0.5 rounded">
+            {shuttleSpeed > 0 ? `+${shuttleSpeed}x` : `${shuttleSpeed}x`}
+          </span>
         )}
       </div>
 
-      {/* 2. J-K-L Shuttle Speed Indicator & Transport Status */}
+      {/* 3. Right: Snapping & Zoom */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[2px] bg-[#111215] border border-[#2b2e36] text-[10px] font-mono">
-          <span className="text-slate-500 font-semibold uppercase">Shuttle:</span>
-          <span className={`font-bold ${
-            shuttleSpeed === 0 ? "text-slate-400" :
-            shuttleSpeed > 0 ? "text-emerald-400" : "text-amber-400"
-          }`}>
-            {shuttleSpeed === 0 && "⏸ Paused (K)"}
-            {shuttleSpeed === 1 && "▶ 1x Fwd (L)"}
-            {shuttleSpeed === 2 && "▶▶ 2x Fast"}
-            {shuttleSpeed === 4 && "▶▶▶ 4x Shuttle"}
-            {shuttleSpeed === -1 && "◀ 1x Rev (J)"}
-            {shuttleSpeed === -2 && "◀◀ 2x Rev"}
-            {shuttleSpeed === -4 && "◀◀◀ 4x Shuttle"}
-          </span>
-        </div>
+        <button
+          onClick={onUndo}
+          disabled={!canUndo}
+          className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30"
+          title="Undo (Ctrl+Z)"
+        >
+          <Undo2 className="w-3.5 h-3.5" />
+        </button>
+        <button
+          onClick={onRedo}
+          disabled={!canRedo}
+          className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30"
+          title="Redo (Ctrl+Y)"
+        >
+          <Redo2 className="w-3.5 h-3.5" />
+        </button>
 
-        {/* Undo/Redo & Zoom Controls */}
-        <div className="flex items-center gap-1 border-l border-[#2b2e36] pl-2">
-          <button
-            disabled={!canUndo}
-            onClick={onUndo}
-            title="Undo (Ctrl+Z)"
-            className="p-1 rounded-[2px] text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-25 transition-colors"
-          >
-            <Undo2 className="w-3.5 h-3.5" />
-          </button>
-          <button
-            disabled={!canRedo}
-            onClick={onRedo}
-            title="Redo (Ctrl+Y)"
-            className="p-1 rounded-[2px] text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-25 transition-colors"
-          >
-            <Redo2 className="w-3.5 h-3.5" />
-          </button>
+        <button
+          onClick={onToggleSnapping}
+          title="Magnetic Snapping (S)"
+          className={`p-1 rounded transition-colors ${
+            snapping ? "text-amber-400 bg-amber-400/10" : "text-slate-500 hover:text-slate-300"
+          }`}
+        >
+          <Magnet className="w-3.5 h-3.5" />
+        </button>
 
-          {/* Zoom Slider */}
-          <div className="flex items-center gap-1 bg-[#111215] px-2 py-1 rounded-[2px] border border-[#2b2e36] ml-1">
-            <button
-              onClick={() => onZoomChange(Math.max(20, zoomScale - 15))}
-              className="text-slate-400 hover:text-white"
-              title="Zoom Out Timeline (-)"
-            >
-              <ZoomOut className="w-3 h-3" />
-            </button>
-            <input
-              type="range"
-              min={20}
-              max={150}
-              value={zoomScale}
-              onChange={(e) => onZoomChange(Number(e.target.value))}
-              className="w-16 h-1 bg-slate-800 accent-[#3B63FF] rounded cursor-pointer"
-            />
-            <button
-              onClick={() => onZoomChange(Math.min(150, zoomScale + 15))}
-              className="text-slate-400 hover:text-white"
-              title="Zoom In Timeline (+)"
-            >
-              <ZoomIn className="w-3 h-3" />
-            </button>
-          </div>
+        {/* Zoom Slider */}
+        <div className="flex items-center gap-1 bg-[#0f1015] border border-[#232532] rounded px-1.5 py-0.5">
+          <ZoomOut 
+            className="w-3 h-3 text-slate-500 cursor-pointer hover:text-slate-300" 
+            onClick={() => onZoomChange(Math.max(10, zoomScale - 10))} 
+          />
+          <input
+            type="range"
+            min={10}
+            max={120}
+            value={zoomScale}
+            onChange={(e) => onZoomChange(Number(e.target.value))}
+            className="w-16 h-1 accent-[#3B63FF] bg-slate-700 cursor-pointer"
+          />
+          <ZoomIn 
+            className="w-3 h-3 text-slate-500 cursor-pointer hover:text-slate-300" 
+            onClick={() => onZoomChange(Math.min(120, zoomScale + 10))} 
+          />
         </div>
       </div>
     </div>

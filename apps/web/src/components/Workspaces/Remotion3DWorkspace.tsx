@@ -15,21 +15,30 @@ import {
   Check, 
   Box,
   Copy,
-  Plus
+  Plus,
+  Download,
+  Camera,
+  Palette
 } from "lucide-react";
 
 interface Remotion3DWorkspaceProps {
   onInsertTemplate?: (templateTitle: string) => void;
+  onShowToast?: (msg: string) => void;
 }
 
 export const Remotion3DWorkspace: React.FC<Remotion3DWorkspaceProps> = ({
   onInsertTemplate,
+  onShowToast,
 }) => {
   const [activeMotionStyle, setActiveMotionStyle] = useState<"barchart" | "tierlist" | "paper" | "exploded">("barchart");
+  const [cameraAngle, setCameraAngle] = useState<"perspective" | "isometric" | "topdown" | "tilt">("perspective");
+  const [colorTheme, setColorTheme] = useState<"violet" | "emerald" | "amber" | "titanium">("violet");
   const [isPlaying, setIsPlaying] = useState(true);
   const [bar1Value, setBar1Value] = useState(118);
   const [bar2Value, setBar2Value] = useState(94);
   const [hasInserted, setHasInserted] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
 
   const motionStyles = [
     {
@@ -80,7 +89,38 @@ export const Remotion3DWorkspace: React.FC<Remotion3DWorkspaceProps> = ({
         "Remotion: Exploded Layers 3D";
       onInsertTemplate(templateName);
     }
+    if (onShowToast) {
+      onShowToast(`✨ Inserted 3D Remotion graphic into V2 track!`);
+    }
     setTimeout(() => setHasInserted(false), 2500);
+  };
+
+  const handleExportTransparentWebM = () => {
+    setIsExporting(true);
+    setExportProgress(10);
+    const interval = setInterval(() => {
+      setExportProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setIsExporting(false);
+
+          // Generate dummy webm download
+          const blob = new Blob(["Remotion Headless WebM 4K Alpha Stream"], { type: "video/webm" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `remotion_${activeMotionStyle}_4k_alpha.webm`;
+          link.click();
+          URL.revokeObjectURL(url);
+
+          if (onShowToast) {
+            onShowToast(`Downloaded transparent 4K WebM alpha motion graphic!`);
+          }
+          return 0;
+        }
+        return prev + 15;
+      });
+    }, 200);
   };
 
   return (
@@ -93,64 +133,123 @@ export const Remotion3DWorkspace: React.FC<Remotion3DWorkspaceProps> = ({
             <span className="text-xs font-bold text-white tracking-wide">REMOTION 3D MOTION STUDIO</span>
           </div>
           <span className="text-[10px] bg-violet-500/20 text-violet-300 border border-violet-500/30 px-1.5 py-0.5 rounded font-mono">
-            React v19
+            React 19 &bull; 60fps
           </span>
         </div>
 
-        {/* 4 Core Styles Picker (SlotStudio exact showcase) */}
-        <div className="p-3 border-b border-slate-800 space-y-2 bg-[#0d0f14]">
-          <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-            SlotStudio Motion Templates
-          </div>
+        {/* 4 Core Styles Picker */}
+        <div className="p-3 border-b border-slate-800 bg-[#0d0f14] space-y-2">
+          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+            Select Motion Graphic Node
+          </span>
           <div className="space-y-1.5">
             {motionStyles.map((style) => {
               const Icon = style.icon;
-              const isActive = activeMotionStyle === style.id;
+              const isSelected = activeMotionStyle === style.id;
               return (
-                <div
+                <button
                   key={style.id}
                   onClick={() => setActiveMotionStyle(style.id as any)}
-                  className={`p-2.5 rounded border cursor-pointer transition-all ${
-                    isActive 
-                      ? "bg-violet-950/30 border-violet-500/80 shadow-md shadow-violet-950/40" 
-                      : "bg-[#14171d] border-slate-800 hover:border-slate-700"
+                  className={`w-full p-2.5 rounded-lg border text-left transition-all flex items-start gap-2.5 ${
+                    isSelected
+                      ? "bg-[#181c26] border-violet-500/80 shadow-md shadow-violet-950/30"
+                      : "bg-[#12151c] border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-1.5 font-bold text-xs text-white">
-                      <Icon className={`w-3.5 h-3.5 ${style.color}`} />
-                      <span>{style.title}</span>
-                    </div>
-                    <span className="text-[9px] font-mono bg-slate-800 px-1.5 py-0.2 rounded text-slate-300 border border-slate-700">
-                      {style.badge}
-                    </span>
+                  <div className={`p-1.5 rounded-md ${isSelected ? "bg-violet-600 text-white" : "bg-slate-800 text-slate-400"}`}>
+                    <Icon className="w-4 h-4" />
                   </div>
-                  <p className="text-[10px] text-slate-400 leading-snug">
-                    {style.desc}
-                  </p>
-                </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs font-bold truncate ${isSelected ? "text-white" : "text-slate-200"}`}>
+                        {style.title}
+                      </span>
+                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                        {style.badge}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 line-clamp-1 mt-0.5">{style.subtitle}</p>
+                  </div>
+                </button>
               );
             })}
           </div>
         </div>
 
-        {/* Customization Sliders for Active Template */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-3">
-          <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-            Live Template Parameters
+        {/* Camera Angle & Color Themes */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {/* Camera Angles */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Camera className="w-3.5 h-3.5 text-cyan-400" />
+              <span>3D Camera Angle</span>
+            </label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {[
+                { id: "perspective", name: "Perspective 3D" },
+                { id: "isometric", name: "Isometric 45°" },
+                { id: "topdown", name: "Top-Down 2D" },
+                { id: "tilt", name: "Cinematic Tilt" },
+              ].map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setCameraAngle(c.id as any)}
+                  className={`py-1.5 px-2 rounded font-mono text-[11px] border text-center transition-all ${
+                    cameraAngle === c.id
+                      ? "bg-cyan-500/15 border-cyan-500 text-cyan-300 font-bold"
+                      : "bg-[#14171d] border-slate-800 text-slate-400 hover:border-slate-700"
+                  }`}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
           </div>
 
+          {/* Color Palette Theme */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Palette className="w-3.5 h-3.5 text-amber-400" />
+              <span>Material & Shading Theme</span>
+            </label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {[
+                { id: "violet", name: "Cyberpunk Violet" },
+                { id: "emerald", name: "Quantum Emerald" },
+                { id: "amber", name: "Viral Amber" },
+                { id: "titanium", name: "Titanium Metal" },
+              ].map((thm) => (
+                <button
+                  key={thm.id}
+                  onClick={() => setColorTheme(thm.id as any)}
+                  className={`py-1.5 px-2 rounded text-[11px] font-medium border text-center transition-all ${
+                    colorTheme === thm.id
+                      ? "bg-violet-500/15 border-violet-500 text-violet-300 font-bold"
+                      : "bg-[#14171d] border-slate-800 text-slate-400 hover:border-slate-700"
+                  }`}
+                >
+                  {thm.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Interactive Dynamic Param Sliders */}
           {activeMotionStyle === "barchart" && (
-            <div className="space-y-3 bg-[#14171d] p-3 rounded border border-slate-800">
+            <div className="space-y-3 bg-[#14171d] p-3 rounded-lg border border-slate-800">
+              <span className="text-[10px] font-semibold text-slate-300 uppercase tracking-wider block">
+                Extrusion Parameters
+              </span>
+
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span className="text-slate-300">Barbell Row EMG (%)</span>
+                  <span className="text-slate-400">Bar 1 (Primary): Barbell Row</span>
                   <span className="font-mono text-violet-400 font-bold">{bar1Value}%</span>
                 </div>
                 <input 
                   type="range"
-                  min="50"
-                  max="150"
+                  min="30"
+                  max="180"
                   value={bar1Value}
                   onChange={(e) => setBar1Value(Number(e.target.value))}
                   className="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-violet-500"
@@ -159,13 +258,13 @@ export const Remotion3DWorkspace: React.FC<Remotion3DWorkspaceProps> = ({
 
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span className="text-slate-300">Lat Pulldown EMG (%)</span>
+                  <span className="text-slate-400">Bar 2 (Secondary): Pulldown</span>
                   <span className="font-mono text-cyan-400 font-bold">{bar2Value}%</span>
                 </div>
                 <input 
                   type="range"
-                  min="50"
-                  max="150"
+                  min="30"
+                  max="180"
                   value={bar2Value}
                   onChange={(e) => setBar2Value(Number(e.target.value))}
                   className="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-cyan-500"
@@ -175,7 +274,7 @@ export const Remotion3DWorkspace: React.FC<Remotion3DWorkspaceProps> = ({
           )}
 
           {activeMotionStyle === "tierlist" && (
-            <div className="bg-[#14171d] p-3 rounded border border-slate-800 space-y-2 text-xs">
+            <div className="bg-[#14171d] p-3 rounded-lg border border-slate-800 space-y-2 text-xs">
               <div className="flex items-center justify-between text-amber-400 font-bold">
                 <span>Tier Rankings</span>
                 <span className="text-[10px] bg-amber-500/20 px-1.5 rounded">4 Tiers</span>
@@ -196,7 +295,7 @@ export const Remotion3DWorkspace: React.FC<Remotion3DWorkspaceProps> = ({
           )}
 
           {activeMotionStyle === "paper" && (
-            <div className="bg-[#14171d] p-3 rounded border border-slate-800 space-y-2 text-xs">
+            <div className="bg-[#14171d] p-3 rounded-lg border border-slate-800 space-y-2 text-xs">
               <div className="flex items-center justify-between text-cyan-400 font-bold">
                 <span>Citation Highlight</span>
                 <span className="text-[10px] bg-cyan-500/20 px-1.5 rounded">PDF Parser</span>
@@ -210,14 +309,25 @@ export const Remotion3DWorkspace: React.FC<Remotion3DWorkspaceProps> = ({
             </div>
           )}
 
-          {/* Action button */}
-          <button 
-            onClick={handleInsert}
-            className="w-full mt-2 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-violet-950/40 active:scale-95 transition-all"
-          >
-            {hasInserted ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-            <span>{hasInserted ? "Inserted into V2 Track!" : "Insert into V2 Track"}</span>
-          </button>
+          {/* Action buttons */}
+          <div className="space-y-2 pt-2">
+            <button 
+              onClick={handleInsert}
+              className="w-full py-2.5 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-violet-950/40 active:scale-95 transition-all"
+            >
+              {hasInserted ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+              <span>{hasInserted ? "Inserted into V2 Track!" : "Insert into V2 Track"}</span>
+            </button>
+
+            <button
+              onClick={handleExportTransparentWebM}
+              disabled={isExporting}
+              className="w-full py-2 bg-[#181c24] hover:bg-[#1f242e] border border-slate-700 text-slate-300 font-medium rounded-lg text-xs flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+            >
+              <Download className="w-3.5 h-3.5 text-cyan-400" />
+              <span>{isExporting ? `Rendering Alpha (${exportProgress}%)...` : "Export 4K WebM with Alpha"}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -229,7 +339,7 @@ export const Remotion3DWorkspace: React.FC<Remotion3DWorkspaceProps> = ({
             <Box className="w-4 h-4 text-violet-400" />
             <span className="text-xs font-semibold text-white">Remotion Composition Viewport</span>
             <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono border border-slate-700">
-              60.0 FPS • 4K WebGL Canvas
+              60.0 FPS &bull; 4K WebGL Canvas &bull; {cameraAngle.toUpperCase()}
             </span>
           </div>
 
@@ -243,7 +353,13 @@ export const Remotion3DWorkspace: React.FC<Remotion3DWorkspaceProps> = ({
 
         {/* 16:9 Canvas Viewport */}
         <div className="flex-1 flex items-center justify-center p-8 relative overflow-hidden">
-          <div className="w-full max-w-3xl aspect-video bg-gradient-to-b from-[#161a25] via-[#0d0f15] to-[#08090d] rounded-xl border border-slate-700/80 shadow-2xl relative overflow-hidden flex flex-col justify-between p-8">
+          <div 
+            className={`w-full max-w-3xl aspect-video bg-gradient-to-b from-[#161a25] via-[#0d0f15] to-[#08090d] rounded-xl border border-slate-700/80 shadow-2xl relative overflow-hidden flex flex-col justify-between p-8 transition-transform duration-500 ${
+              cameraAngle === "isometric" ? "rotate-x-12 rotate-y-6 scale-95" :
+              cameraAngle === "topdown" ? "scale-90" :
+              cameraAngle === "tilt" ? "-rotate-2 scale-100" : ""
+            }`}
+          >
             {/* Background Grid & Ambient Glow */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(139,92,246,0.15),transparent_70%)] pointer-events-none"></div>
 
@@ -280,8 +396,16 @@ export const Remotion3DWorkspace: React.FC<Remotion3DWorkspaceProps> = ({
                       {bar1Value}%
                     </span>
                     <div 
-                      className="w-24 bg-gradient-to-t from-violet-700 via-violet-500 to-violet-300 rounded-t-lg border-t-2 border-l border-r border-violet-200 shadow-[0_0_30px_rgba(139,92,246,0.5)] transition-all duration-300 relative overflow-hidden"
-                      style={{ height: `${bar1Value * 1.5}px` }}
+                      className={`w-24 rounded-t-lg border-t-2 border-l border-r shadow-[0_0_30px_rgba(139,92,246,0.5)] transition-all duration-300 relative overflow-hidden ${
+                        colorTheme === "emerald" 
+                          ? "bg-gradient-to-t from-emerald-700 via-emerald-500 to-emerald-300 border-emerald-200" 
+                          : colorTheme === "amber"
+                          ? "bg-gradient-to-t from-amber-700 via-amber-500 to-amber-300 border-amber-200"
+                          : colorTheme === "titanium"
+                          ? "bg-gradient-to-t from-slate-700 via-slate-500 to-slate-300 border-slate-200"
+                          : "bg-gradient-to-t from-violet-700 via-violet-500 to-violet-300 border-violet-200"
+                      }`}
+                      style={{ height: `${bar1Value * 1.4}px` }}
                     >
                       <div className="absolute inset-0 bg-white/20 transform -skew-y-12"></div>
                     </div>
@@ -296,7 +420,7 @@ export const Remotion3DWorkspace: React.FC<Remotion3DWorkspaceProps> = ({
                     </span>
                     <div 
                       className="w-24 bg-gradient-to-t from-cyan-700 via-cyan-500 to-cyan-300 rounded-t-lg border-t-2 border-l border-r border-cyan-200 shadow-[0_0_25px_rgba(6,182,212,0.4)] transition-all duration-300 relative overflow-hidden"
-                      style={{ height: `${bar2Value * 1.5}px` }}
+                      style={{ height: `${bar2Value * 1.4}px` }}
                     >
                       <div className="absolute inset-0 bg-white/20 transform -skew-y-12"></div>
                     </div>
@@ -328,7 +452,7 @@ export const Remotion3DWorkspace: React.FC<Remotion3DWorkspaceProps> = ({
 
               {activeMotionStyle === "paper" && (
                 <div className="w-full max-w-md bg-white text-slate-900 p-6 rounded-lg shadow-2xl border border-slate-300 transform -rotate-1 hover:rotate-0 transition-transform relative">
-                  <p className="text-[10px] text-slate-500 font-serif">Clinical Journal of Sport Medicine • 1995</p>
+                  <p className="text-[10px] text-slate-500 font-serif">Clinical Journal of Sport Medicine &bull; 1995</p>
                   <h4 className="text-sm font-serif font-bold text-slate-900 mt-1">
                     Fat-Free Mass Index in Anabolic-Androgenic Steroid Users
                   </h4>
