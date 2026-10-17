@@ -7,6 +7,9 @@ import { AudioMeter } from "../components/AudioMeter";
 import { ClipInspector } from "../components/RightPanel/ClipInspector";
 import { AICommandBar } from "../components/AICommandBar/AICommandBar";
 import { OnePromptModal } from "../components/Modals/OnePromptModal";
+import { ExportPublishModal } from "../components/Modals/ExportPublishModal";
+import { YouTubeClipFinder } from "../components/LeftPanel/YouTubeClipFinder";
+import { VoiceCleanStation } from "../components/LeftPanel/VoiceCleanStation";
 import { TranscriptEditor, TranscriptWord } from "../components/LeftPanel/TranscriptEditor";
 import { ScriptPanel, ScriptScene, Claim } from "../components/LeftPanel/ScriptPanel";
 import { AssetBin, MotionTemplateItem } from "../components/LeftPanel/AssetBin";
@@ -19,6 +22,11 @@ import { FileText, Sparkles, FolderKanban, Bot, Sliders } from "lucide-react";
 import { ColorGradingWorkspace } from "../components/Workspaces/ColorGradingWorkspace";
 import { AudioMixerWorkspace } from "../components/Workspaces/AudioMixerWorkspace";
 import { AIDirectorWorkspace } from "../components/Workspaces/AIDirectorWorkspace";
+import { ClipFinderWorkspace } from "../components/Workspaces/ClipFinderWorkspace";
+import { VoiceCleanupWorkspace } from "../components/Workspaces/VoiceCleanupWorkspace";
+import { Remotion3DWorkspace } from "../components/Workspaces/Remotion3DWorkspace";
+import { PublishingKitWorkspace } from "../components/Workspaces/PublishingKitWorkspace";
+import { ClaudeAICopilotDrawer } from "../components/ClaudeAICopilotDrawer";
 
 // Initial Demo Tracks
 const INITIAL_TRACKS: TrackConfig[] = [
@@ -86,6 +94,7 @@ export default function StudioEditorPage() {
   // Workspace Modes
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceMode>("edit");
   const [isOnePromptModalOpen, setIsOnePromptModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [activeLut, setActiveLut] = useState("Moody Teal & Orange");
 
   // Playhead & Transport State
@@ -97,7 +106,7 @@ export default function StudioEditorPage() {
   const [activeStage, setActiveStage] = useState("timeline");
 
   // Left Panel Tabs
-  const [leftTab, setLeftTab] = useState<"transcript" | "script" | "assets" | "proposals">("transcript");
+  const [leftTab, setLeftTab] = useState<"youtube" | "voice" | "transcript" | "script" | "assets" | "proposals">("youtube");
 
   // Timeline State
   const [tracks, setTracks] = useState<TrackConfig[]>(INITIAL_TRACKS);
@@ -373,8 +382,42 @@ export default function StudioEditorPage() {
   };
 
   // Master Render Export (100% Free & Unmetered)
+
+  // Slot Studio YouTube Clip Ingestion
+  const handleInsertYouTubeClip = (clipData: { title: string; durationMs: number; source: string }) => {
+    const newId = `c_yt_${Date.now()}`;
+    const newClip: TimelineClip = {
+      id: newId,
+      trackId: "v1",
+      title: `${clipData.title} (${clipData.source})`,
+      startMs: currentTimeMs,
+      durationMs: clipData.durationMs,
+      colorClass: "bg-[#3B63FF]/30 text-white",
+      borderClass: "border-[#3B63FF]",
+      type: "video"
+    };
+    setClips((prev) => [...prev, newClip]);
+    showToast(`Saved 4K footage from YouTube: ${clipData.title} (3840×2160)`);
+  };
+
+  // Slot Studio Clean Voice Ingestion
+  const handleApplyCleanVoice = () => {
+    setClips((prev) => prev.map((c) => {
+      if (c.trackId === "a1") {
+        return {
+          ...c,
+          title: "Voiceover (Cleaned 48kHz, Breaths Cut)",
+          colorClass: "bg-emerald-500/30 text-emerald-200",
+          borderClass: "border-emerald-400"
+        };
+      }
+      return c;
+    }));
+    showToast("Cleaned voiceover applied: 0 words clipped, -14.0 LUFS broadcast normalized.");
+  };
+
   const handleExport = () => {
-    showToast(`Render Queued (${previewQuality}): 100% Free & Unmetered master MP4 rendering.`);
+    setIsExportModalOpen(true);
   };
 
   const selectedClip = clips.find((c) => c.id === selectedClipId) || null;
@@ -388,7 +431,14 @@ export default function StudioEditorPage() {
         previewQuality={previewQuality}
         onQualityChange={setPreviewQuality}
         activeStage={activeStage}
-        onStageSelect={setActiveStage}
+        onStageSelect={(stage) => {
+          setActiveStage(stage);
+          if (stage === "youtube") setLeftTab("youtube");
+          else if (stage === "voice") setLeftTab("voice");
+          else if (stage === "script") setLeftTab("script");
+          else if (stage === "graphics") setLeftTab("assets");
+          else if (stage === "render") setIsExportModalOpen(true);
+        }}
         activeWorkspace={activeWorkspace}
         onWorkspaceChange={setActiveWorkspace}
         onOpenOnePromptModal={() => setIsOnePromptModalOpen(true)}
@@ -441,50 +491,72 @@ export default function StudioEditorPage() {
           <>
             {/* Left Side: Multi-Tab Panel */}
             <div className="w-[400px] bg-studio-900 border-r border-studio-800 flex flex-col flex-shrink-0">
-              {/* Tab Selector Header */}
-              <div className="h-10 bg-studio-950 border-b border-studio-800 px-2 flex items-center gap-1 select-none text-xs">
+              {/* Tab Selector Header (Slot Studio 5-Pillar Tabs) */}
+              <div className="h-10 bg-[#05060a] border-b border-white/5 px-2 flex items-center gap-1 select-none text-xs overflow-x-auto">
                 <button
-                  onClick={() => setLeftTab("transcript")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-t text-xs font-medium border-b-2 transition-all ${
-                    leftTab === "transcript"
-                      ? "border-violet-500 text-slate-100 bg-studio-900"
+                  onClick={() => setLeftTab("youtube")}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-t text-xs font-bold border-b-2 transition-all ${
+                    leftTab === "youtube"
+                      ? "border-[#3B63FF] text-white bg-[#0a0c12]"
                       : "border-transparent text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  <FileText className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Transcript</span>
+                  <span className="text-[#3B63FF]">▶</span>
+                  <span>YouTube Clips</span>
+                </button>
+                <button
+                  onClick={() => setLeftTab("voice")}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-t text-xs font-bold border-b-2 transition-all ${
+                    leftTab === "voice"
+                      ? "border-[#3B63FF] text-white bg-[#0a0c12]"
+                      : "border-transparent text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <span className="text-emerald-400">🎙</span>
+                  <span>Voice Clean</span>
                 </button>
                 <button
                   onClick={() => setLeftTab("script")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-t text-xs font-medium border-b-2 transition-all ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-t text-xs font-bold border-b-2 transition-all ${
                     leftTab === "script"
-                      ? "border-violet-500 text-slate-100 bg-studio-900"
+                      ? "border-[#3B63FF] text-white bg-[#0a0c12]"
                       : "border-transparent text-slate-400 hover:text-slate-200"
                   }`}
                 >
                   <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Script</span>
+                  <span>Script & Facts</span>
                 </button>
                 <button
                   onClick={() => setLeftTab("assets")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-t text-xs font-medium border-b-2 transition-all ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-t text-xs font-bold border-b-2 transition-all ${
                     leftTab === "assets"
-                      ? "border-violet-500 text-slate-100 bg-studio-900"
+                      ? "border-[#3B63FF] text-white bg-[#0a0c12]"
                       : "border-transparent text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  <FolderKanban className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Project Bin</span>
+                  <FolderKanban className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Motion FX</span>
+                </button>
+                <button
+                  onClick={() => setLeftTab("transcript")}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-t text-xs font-bold border-b-2 transition-all ${
+                    leftTab === "transcript"
+                      ? "border-[#3B63FF] text-white bg-[#0a0c12]"
+                      : "border-transparent text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Transcript</span>
                 </button>
                 <button
                   onClick={() => setLeftTab("proposals")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-t text-xs font-medium border-b-2 transition-all relative ${
+                  className={`flex items-center gap-1.5 px-2 py-1.5 rounded-t text-xs font-bold border-b-2 transition-all relative ${
                     leftTab === "proposals"
-                      ? "border-violet-500 text-slate-100 bg-studio-900"
+                      ? "border-[#3B63FF] text-white bg-[#0a0c12]"
                       : "border-transparent text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  <Bot className="w-3.5 h-3.5 text-violet-400" />
+                  <Bot className="w-3.5 h-3.5 text-[#3B63FF]" />
                   <span>MCP AI</span>
                   {proposals.length > 0 && (
                     <span className="w-2 h-2 rounded-full bg-amber-400" />
@@ -494,6 +566,12 @@ export default function StudioEditorPage() {
 
               {/* Active Tab Content */}
               <div className="flex-1 overflow-hidden">
+                {leftTab === "youtube" && (
+                  <YouTubeClipFinder onInsertClip={handleInsertYouTubeClip} />
+                )}
+                {leftTab === "voice" && (
+                  <VoiceCleanStation onApplyVoice={handleApplyCleanVoice} />
+                )}
                 {leftTab === "transcript" && (
                   <TranscriptEditor
                     words={words}
@@ -631,6 +709,15 @@ export default function StudioEditorPage() {
         isOpen={isOnePromptModalOpen}
         onClose={() => setIsOnePromptModalOpen(false)}
         onGenerate={handleOnePromptGenerate}
+      />
+
+      {/* 6. Creator Publish Pack & 4K Export Modal */}
+      <ExportPublishModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        projectTitle="Quantum Supremacy 2026"
+        totalDurationMs={totalDurationMs}
+        clips={clips}
       />
 
       {/* Toast Notification */}

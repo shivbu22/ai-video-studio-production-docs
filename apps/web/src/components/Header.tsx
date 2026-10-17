@@ -9,12 +9,16 @@ import {
   Bot, 
   ChevronRight,
   Palette,
-  Sliders,
+  SlidersVertical,
   Wand2,
-  SlidersVertical
+  Video,
+  Mic,
+  BarChart3,
+  Layers,
+  Search
 } from "lucide-react";
 
-export type WorkspaceMode = "edit" | "color" | "audio" | "director";
+export type WorkspaceMode = "edit" | "clipfinder" | "cleanup" | "remotion" | "color" | "audio" | "director" | "publish";
 
 interface HeaderProps {
   projectTitle: string;
@@ -28,17 +32,17 @@ interface HeaderProps {
   onOpenProposals: () => void;
   hasPendingProposal: boolean;
   onExport: () => void;
+  onToggleCopilot?: () => void;
+  isCopilotOpen?: boolean;
 }
 
 const STAGES = [
-  { id: "brief", label: "Brief" },
-  { id: "research", label: "Research" },
-  { id: "script", label: "Script" },
-  { id: "voice", label: "Voice" },
-  { id: "cleanup", label: "Cleanup" },
-  { id: "visuals", label: "Visuals" },
-  { id: "timeline", label: "Timeline" },
-  { id: "render", label: "Render" },
+  { id: "script", label: "Script & Research" },
+  { id: "youtube", label: "YouTube Clips" },
+  { id: "voice", label: "Voice Clean" },
+  { id: "graphics", label: "Motion Graphics" },
+  { id: "timeline", label: "Timeline NLE" },
+  { id: "render", label: "Publish Pack" },
 ];
 
 export const Header: React.FC<HeaderProps> = ({
@@ -53,54 +57,101 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProposals,
   hasPendingProposal,
   onExport,
+  onToggleCopilot,
+  isCopilotOpen = false,
 }) => {
   return (
-    <header className="h-14 bg-studio-950 border-b border-studio-800 px-4 flex items-center justify-between z-30 select-none backdrop-blur-md">
+    <header className="h-14 bg-[#05060a] border-b border-white/10 px-4 flex items-center justify-between z-30 select-none backdrop-blur-xl">
       {/* Brand & Workspace Mode Switcher */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-3 py-1.5 rounded-lg shadow-sm font-black tracking-wider text-xs">
-          <Film className="w-4 h-4" />
-          <span>STUDIO PRO</span>
+        {/* Slot Studio Official Logo */}
+        <div 
+          onClick={() => onWorkspaceChange("edit")}
+          className="flex items-center gap-2 cursor-pointer group"
+        >
+          <svg viewBox="0 0 64 36" className="w-8 h-4.5 transition-transform group-hover:scale-105">
+            <rect x="1.5" y="1.5" width="16" height="33" rx="6.5" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="3"/>
+            <rect x="24" y="0" width="16" height="36" rx="7" fill="#3B63FF"/>
+            <rect x="25.5" y="1.5" width="13" height="10" rx="5" fill="#ffffff" opacity="0.25"/>
+            <rect x="46.5" y="1.5" width="16" height="33" rx="6.5" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="3"/>
+          </svg>
+          <span className="font-extrabold text-white text-sm tracking-tight font-sans">
+            Slot Studio
+          </span>
+          <span className="text-[10px] bg-[#3B63FF]/15 text-[#9fb4ff] font-semibold px-2 py-0.5 rounded-full border border-[#3B63FF]/30 hidden sm:inline">
+            Web Platform
+          </span>
         </div>
 
-        {/* Workspace Mode Pills (Premiere / DaVinci Style) */}
-        <div className="hidden md:flex items-center bg-studio-900 border border-studio-800 rounded-lg p-0.5 text-xs">
+        {/* Workspace Mode Pills */}
+        <div className="hidden lg:flex items-center bg-[#10131b] border border-white/10 rounded-full p-0.5 text-xs">
           <button
             onClick={() => onWorkspaceChange("edit")}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold transition-all ${
               activeWorkspace === "edit"
-                ? "bg-violet-600 text-white shadow-sm"
+                ? "bg-[#3B63FF] text-white shadow-md shadow-[#3B63FF]/30"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
             <Film className="w-3.5 h-3.5" />
-            <span>Edit</span>
+            <span>Timeline</span>
+          </button>
+          <button
+            onClick={() => onWorkspaceChange("clipfinder")}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold transition-all ${
+              activeWorkspace === "clipfinder"
+                ? "bg-violet-600 text-white shadow-sm"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <span>Clip Finder</span>
+          </button>
+          <button
+            onClick={() => onWorkspaceChange("cleanup")}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold transition-all ${
+              activeWorkspace === "cleanup"
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <span>VO Cleanup</span>
+          </button>
+          <button
+            onClick={() => onWorkspaceChange("remotion")}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold transition-all ${
+              activeWorkspace === "remotion"
+                ? "bg-purple-600 text-white shadow-sm"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Remotion 3D</span>
           </button>
           <button
             onClick={() => onWorkspaceChange("color")}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold transition-all ${
               activeWorkspace === "color"
                 ? "bg-amber-600 text-white shadow-sm"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
             <Palette className="w-3.5 h-3.5" />
-            <span>Color Grading</span>
+            <span>Color</span>
           </button>
           <button
             onClick={() => onWorkspaceChange("audio")}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold transition-all ${
               activeWorkspace === "audio"
-                ? "bg-emerald-600 text-white shadow-sm"
+                ? "bg-teal-600 text-white shadow-sm"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
             <SlidersVertical className="w-3.5 h-3.5" />
-            <span>Audio Mixer</span>
+            <span>Mixer</span>
           </button>
           <button
             onClick={() => onWorkspaceChange("director")}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold transition-all ${
               activeWorkspace === "director"
                 ? "bg-cyan-600 text-white shadow-sm"
                 : "text-slate-400 hover:text-slate-200"
@@ -109,29 +160,30 @@ export const Header: React.FC<HeaderProps> = ({
             <Wand2 className="w-3.5 h-3.5" />
             <span>AI Director</span>
           </button>
-        </div>
-
-        {/* Project Name */}
-        <div className="h-5 w-[1px] bg-studio-800 mx-1 hidden lg:block" />
-        <div className="hidden xl:flex items-center gap-2">
-          <span className="font-semibold text-xs text-slate-200 truncate max-w-[200px]">{projectTitle}</span>
-          <span className="text-[10px] bg-emerald-500/10 text-emerald-400 font-medium px-2 py-0.5 rounded-full border border-emerald-500/30">
-            Route B Clean-Room
-          </span>
+          <button
+            onClick={() => onWorkspaceChange("publish")}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold transition-all ${
+              activeWorkspace === "publish"
+                ? "bg-rose-600 text-white shadow-sm"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <span>Publish Kit</span>
+          </button>
         </div>
       </div>
 
-      {/* 10-Stage Pipeline Indicator */}
-      <div className="hidden 2xl:flex items-center gap-1 bg-studio-900/80 p-1 rounded-lg border border-studio-800">
+      {/* Slot Studio 6-Stage Pipeline Nav */}
+      <div className="hidden 2xl:flex items-center gap-1 bg-[#0a0c12] px-2.5 py-1 rounded-full border border-white/10">
         {STAGES.map((s, idx) => {
           const isActive = s.id === activeStage;
           return (
             <React.Fragment key={s.id}>
               <button
                 onClick={() => onStageSelect(s.id)}
-                className={`text-[11px] px-2 py-0.5 rounded transition-all font-medium ${
+                className={`text-[11px] px-2.5 py-1 rounded-full transition-all font-semibold ${
                   isActive
-                    ? "bg-violet-600 text-white shadow-sm"
+                    ? "bg-white/15 text-white shadow-sm"
                     : "text-slate-400 hover:text-slate-200"
                 }`}
               >
@@ -145,40 +197,55 @@ export const Header: React.FC<HeaderProps> = ({
         })}
       </div>
 
-      {/* Actions */}
+      {/* Right Action Bar */}
       <div className="flex items-center gap-2.5">
-        {/* 1-Prompt Video Generator */}
+        {/* 1-Prompt Autonomous Video Generator */}
         <button
           onClick={onOpenOnePromptModal}
-          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white font-semibold shadow-md shadow-fuchsia-950/40 active:scale-95 transition-all"
+          className="flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#3B63FF] to-[#2440c9] hover:from-[#4f73ff] hover:to-[#3B63FF] text-white font-bold shadow-lg shadow-[#3B63FF]/25 active:scale-95 transition-all"
         >
-          <Sparkles className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '6s' }} />
+          <Sparkles className="w-3.5 h-3.5" />
           <span>1-Prompt Video</span>
         </button>
+
+        {/* Claude AI Copilot Toggle */}
+        {onToggleCopilot && (
+          <button
+            onClick={onToggleCopilot}
+            className={`flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-full border transition-all ${
+              isCopilotOpen
+                ? "bg-violet-600 border-violet-400 text-white shadow-lg shadow-violet-950/50"
+                : "bg-[#10131b] border-white/10 text-slate-300 hover:bg-[#141824]"
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+            <span className="font-semibold">Claude Copilot</span>
+          </button>
+        )}
 
         {/* MCP Proposal Trigger */}
         <button
           onClick={onOpenProposals}
-          className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border transition-all ${
+          className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-all ${
             hasPendingProposal
               ? "bg-amber-500/10 border-amber-500/50 text-amber-300 animate-pulse"
-              : "bg-studio-900 border-studio-800 text-slate-300 hover:bg-studio-850"
+              : "bg-[#10131b] border-white/10 text-slate-300 hover:bg-[#141824]"
           }`}
         >
-          <Bot className="w-3.5 h-3.5 text-violet-400" />
-          <span>MCP Agent</span>
+          <Bot className="w-3.5 h-3.5 text-[#3B63FF]" />
+          <span className="font-semibold">MCP Agent</span>
           {hasPendingProposal && (
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
           )}
         </button>
 
         {/* Resolution Switcher */}
-        <div className="flex items-center bg-studio-900 border border-studio-800 rounded-lg p-0.5 text-xs">
+        <div className="flex items-center bg-[#10131b] border border-white/10 rounded-full p-0.5 text-xs">
           <button
             onClick={() => onQualityChange("540p")}
-            className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
               previewQuality === "540p"
-                ? "bg-studio-800 text-slate-100 shadow-sm"
+                ? "bg-white/20 text-white shadow-sm"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
@@ -186,9 +253,9 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
           <button
             onClick={() => onQualityChange("1080p")}
-            className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
               previewQuality === "1080p"
-                ? "bg-violet-600 text-white shadow-sm"
+                ? "bg-[#3B63FF] text-white shadow-sm"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
@@ -196,19 +263,13 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </div>
 
-        {/* Unlimited Status Pill */}
-        <div className="hidden sm:flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 px-3 py-1.5 rounded-lg text-xs font-semibold">
-          <Zap className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400" />
-          <span>Unlimited</span>
-        </div>
-
-        {/* Render/Export Button */}
+        {/* Slot Studio Signature White Pill Export Button */}
         <button
           onClick={onExport}
-          className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg shadow-sm active:scale-95 transition-all"
+          className="btn-slot btn-slot-buy text-xs font-bold px-4 py-1.5 text-black shadow-lg"
         >
-          <Download className="w-3.5 h-3.5" />
-          <span>Export</span>
+          <Download className="w-3.5 h-3.5 text-black" />
+          <span>Export 4K Master</span>
         </button>
       </div>
     </header>
