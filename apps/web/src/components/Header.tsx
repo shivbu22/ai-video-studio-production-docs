@@ -15,10 +15,11 @@ import {
   Mic,
   BarChart3,
   Layers,
-  Search
+  Search,
+  BookOpen
 } from "lucide-react";
 
-export type WorkspaceMode = "edit" | "clipfinder" | "cleanup" | "remotion" | "color" | "audio" | "director" | "publish";
+export type WorkspaceMode = "edit" | "script" | "clipfinder" | "cleanup" | "remotion" | "color" | "audio" | "director" | "publish";
 
 interface HeaderProps {
   projectTitle: string;
@@ -35,6 +36,7 @@ interface HeaderProps {
   onOpenConnections?: () => void;
   onToggleCopilot?: () => void;
   isCopilotOpen?: boolean;
+  onSelectProjectPreset?: (presetId: string) => void;
 }
 
 const STAGES = [
@@ -85,6 +87,26 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
+        {/* Project Selector Dropdown */}
+        <div className="hidden xl:flex items-center gap-1.5 bg-[#10131b] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-slate-300">
+          <Film className="w-3.5 h-3.5 text-[#3B63FF]" />
+          <select
+            value={projectTitle}
+            onChange={(e) => {
+              if (onSelectProjectPreset) {
+                if (e.target.value.includes("Quantum")) onSelectProjectPreset("quantum");
+                else if (e.target.value.includes("Hypertrophy")) onSelectProjectPreset("hypertrophy");
+                else if (e.target.value.includes("Autonomous")) onSelectProjectPreset("agents");
+              }
+            }}
+            className="bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer"
+          >
+            <option value="Quantum Supremacy 2026" className="bg-[#10131b] text-white">Quantum Supremacy 2026</option>
+            <option value="Back Hypertrophy: Rows vs Pullups" className="bg-[#10131b] text-white">Back Hypertrophy: Rows vs Pullups</option>
+            <option value="Autonomous AI Video Editors 2026" className="bg-[#10131b] text-white">Autonomous AI Video Editors 2026</option>
+          </select>
+        </div>
+
         {/* Workspace Mode Pills */}
         <div className="hidden lg:flex items-center bg-[#10131b] border border-white/10 rounded-full p-0.5 text-xs">
           <button
@@ -97,6 +119,17 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Film className="w-3.5 h-3.5" />
             <span>Timeline</span>
+          </button>
+          <button
+            onClick={() => onWorkspaceChange("script")}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold transition-all ${
+              activeWorkspace === "script"
+                ? "bg-cyan-600 text-white shadow-sm"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>Script & Research</span>
           </button>
           <button
             onClick={() => onWorkspaceChange("clipfinder")}

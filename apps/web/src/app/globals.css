@@ -133,3 +133,217 @@ nextjs-portal {
 .playhead-needle {
   box-shadow: 0 0 10px 2px rgba(59, 99, 255, 0.8), 0 0 4px rgba(255, 255, 255, 0.8);
 }
+
+/* ==========================================================================
+   ADOBE PREMIERE PRO / DAVINCI RESOLVE INDUSTRIAL NLE DESIGN SYSTEM
+   ========================================================================== */
+
+:root {
+  --nle-bg: #111215;
+  --nle-panel: #18191d;
+  --nle-panel-header: #1f2127;
+  --nle-border: #2b2e36;
+  --nle-border-subtle: #202228;
+  --nle-text: #d4d7e1;
+  --nle-text-dim: #7e8394;
+  --nle-blue: #3B63FF;
+  --nle-playhead: #ff3b3b;
+  --nle-inout: rgba(59, 99, 255, 0.22);
+}
+
+/* Tabular Timecodes (Zero Jitter) */
+.tabular-timecode {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+/* Authentic NLE Multi-Track Clip */
+.nle-clip {
+  position: absolute;
+  border-radius: 2px;
+  overflow: hidden;
+  user-select: none;
+  transition: box-shadow 0.1s, border-color 0.1s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.nle-clip:hover {
+  filter: brightness(1.05);
+}
+
+.nle-clip.selected {
+  outline: 1.5px solid #ffffff;
+  outline-offset: -1px;
+  z-index: 20 !important;
+}
+
+/* Premiere Clip Header */
+.nle-clip-header {
+  height: 16px;
+  background: rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* fx Badge (Industry Standard) */
+.fx-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 10px;
+  font-size: 7.5px;
+  font-weight: 900;
+  border-radius: 1px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.fx-badge-clean {
+  background: #383a42;
+  color: #8c909e;
+  border: 1px solid #4a4d58;
+}
+
+.fx-badge-active {
+  background: #d97706;
+  color: #ffffff;
+  border: 1px solid #f59e0b;
+}
+
+/* Volume Rubberband Wire */
+.rubberband-wire {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  cursor: ns-resize;
+  z-index: 5;
+}
+
+.rubberband-wire:hover {
+  background: #3B63FF;
+  height: 2px;
+}
+
+/* Rubberband Keyframe Diamond */
+.keyframe-diamond {
+  width: 6px;
+  height: 6px;
+  background: #ffffff;
+  border: 1px solid #3B63FF;
+  transform: rotate(45deg);
+  position: absolute;
+  top: -3px;
+  cursor: pointer;
+}
+
+/* In/Out Trim Bracket Handles */
+.trim-bracket-start, .trim-bracket-end {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  z-index: 15;
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.nle-clip:hover .trim-bracket-start,
+.nle-clip:hover .trim-bracket-end {
+  opacity: 1;
+}
+
+.trim-bracket-start {
+  left: 0;
+  background: linear-gradient(to right, rgba(255, 59, 59, 0.7), transparent);
+}
+
+.trim-bracket-end {
+  right: 0;
+  background: linear-gradient(to left, rgba(255, 59, 59, 0.7), transparent);
+}
+
+/* Crossfade Corner Dog-Ear */
+.crossfade-dogear {
+  position: absolute;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.25) 50%);
+  pointer-events: none;
+}
+
+/* Premiere Pro Red Playhead CTI Needle */
+.premiere-cti {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #ff3b3b;
+  pointer-events: none;
+  z-index: 40;
+}
+
+.premiere-cti-head {
+  position: absolute;
+  top: 0;
+  left: -6px;
+  width: 13px;
+  height: 18px;
+  background: #ff3b3b;
+  clip-path: polygon(0% 0%, 100% 0%, 100% 65%, 50% 100%, 0% 65%);
+  cursor: ew-resize;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+}
+
+/* Segmented LED VU Meter */
+.vu-led-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5px;
+  width: 8px;
+  background: #0a0c10;
+  padding: 2px;
+  border-radius: 2px;
+  border: 1px solid #1f2229;
+}
+
+.vu-led-seg {
+  height: 2.5px;
+  width: 100%;
+  border-radius: 0.5px;
+  opacity: 0.2;
+}
+
+.vu-led-seg.active-green {
+  background: #10b981;
+  opacity: 1;
+  box-shadow: 0 0 4px #10b981;
+}
+
+.vu-led-seg.active-yellow {
+  background: #f59e0b;
+  opacity: 1;
+  box-shadow: 0 0 4px #f59e0b;
+}
+
+.vu-led-seg.active-red {
+  background: #ef4444;
+  opacity: 1;
+  box-shadow: 0 0 6px #ef4444;
+}

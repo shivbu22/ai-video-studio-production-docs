@@ -23,6 +23,7 @@ import { FileText, Sparkles, FolderKanban, Bot, Sliders } from "lucide-react";
 import { ColorGradingWorkspace } from "../components/Workspaces/ColorGradingWorkspace";
 import { AudioMixerWorkspace } from "../components/Workspaces/AudioMixerWorkspace";
 import { AIDirectorWorkspace } from "../components/Workspaces/AIDirectorWorkspace";
+import { ResearchScriptWorkspace } from "../components/Workspaces/ResearchScriptWorkspace";
 import { ClipFinderWorkspace } from "../components/Workspaces/ClipFinderWorkspace";
 import { VoiceCleanupWorkspace } from "../components/Workspaces/VoiceCleanupWorkspace";
 import { Remotion3DWorkspace } from "../components/Workspaces/Remotion3DWorkspace";
@@ -99,6 +100,20 @@ export default function StudioEditorPage() {
   const [isConnectionsOpen, setIsConnectionsOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [activeLut, setActiveLut] = useState("Moody Teal & Orange");
+  const [projectTitle, setProjectTitle] = useState("Quantum Supremacy 2026");
+
+  const handleSelectProjectPreset = (presetId: string) => {
+    if (presetId === "quantum") {
+      setProjectTitle("Quantum Supremacy 2026");
+      showToast("Loaded Project: Quantum Supremacy 2026 (Nature 2019)");
+    } else if (presetId === "hypertrophy") {
+      setProjectTitle("Back Hypertrophy: Rows vs Pullups");
+      showToast("Loaded Project: Back Hypertrophy (Schoenfeld 2021)");
+    } else if (presetId === "agents") {
+      setProjectTitle("Autonomous AI Video Editors 2026");
+      showToast("Loaded Project: Autonomous AI Video Editors (Route B)");
+    }
+  };
 
   // Playhead & Transport State
   const [currentTimeMs, setCurrentTimeMs] = useState(3500);
@@ -118,6 +133,9 @@ export default function StudioEditorPage() {
   const [showInspector, setShowInspector] = useState(true);
   const [toolMode, setToolMode] = useState<ToolMode>("select");
   const [snapping, setSnapping] = useState(true);
+  const [inPointMs, setInPointMs] = useState<number | null>(1000);
+  const [outPointMs, setOutPointMs] = useState<number | null>(8000);
+  const [shuttleSpeed, setShuttleSpeed] = useState<number>(0);
   const [zoomScale, setZoomScale] = useState(55); // px per second
   const [words, setWords] = useState<TranscriptWord[]>(INITIAL_WORDS);
 
@@ -160,17 +178,81 @@ export default function StudioEditorPage() {
 
       if (e.code === "Space") {
         e.preventDefault();
-        setIsPlaying((p) => !p);
+        setIsPlaying((p) => {
+          if (!p) setShuttleSpeed(1);
+          else setShuttleSpeed(0);
+          return !p;
+        });
+      } else if (e.key === "j" || e.key === "J") {
+        // Shuttle Reverse (J)
+        e.preventDefault();
+        setIsPlaying(true);
+        setShuttleSpeed((s) => (s <= 0 ? Math.max(-4, s === 0 ? -1 : s * 2) : -1));
+      } else if (e.key === "k" || e.key === "K") {
+        // Shuttle Pause (K)
+        e.preventDefault();
+        setIsPlaying(false);
+        setShuttleSpeed(0);
+      } else if (e.key === "l" || e.key === "L") {
+        // Shuttle Forward (L)
+        e.preventDefault();
+        setIsPlaying(true);
+        setShuttleSpeed((s) => (s >= 0 ? Math.min(4, s === 0 ? 1 : s * 2) : 1));
+      } else if (e.key === "i" || e.key === "I") {
+        // Mark In (I)
+        e.preventDefault();
+        setInPointMs(currentTimeMs);
+        showToast(`Marked IN: ${Math.round(currentTimeMs)}ms`);
+      } else if (e.key === "o" || e.key === "O") {
+        // Mark Out (O)
+        e.preventDefault();
+        setOutPointMs(currentTimeMs);
+        showToast(`Marked OUT: ${Math.round(currentTimeMs)}ms`);
+      } else if (e.altKey && (e.key === "x" || e.key === "X")) {
+        // Clear In/Out (Alt+X)
+        e.preventDefault();
+        setInPointMs(null);
+        setOutPointMs(null);
+        showToast("Cleared In/Out Work Area");
+      } else if (e.key === "m" || e.key === "M") {
+        // Add Marker (M)
+        e.preventDefault();
+        showToast(`Added Marker at ${Math.round(currentTimeMs / 1000)}s`);
+      } else if (e.key === "v" || e.key === "V") {
+        setToolMode("select");
+        showToast("Selection Tool (V)");
+      } else if (e.key === "a" || e.key === "A") {
+        setToolMode("trackSelect");
+        showToast("Track Select Forward (A)");
+      } else if (e.key === "b" || e.key === "B") {
+        setToolMode("ripple");
+        showToast("Ripple Edit Tool (B)");
+      } else if (e.key === "c" || e.key === "C") {
+        setToolMode("razor");
+        showToast("Razor Blade Tool (C)");
+      } else if (e.key === "y" || e.key === "Y") {
+        setToolMode("slip");
+        showToast("Slip Tool (Y)");
+      } else if (e.key === "p" || e.key === "P") {
+        setToolMode("pen");
+        showToast("Pen Keyframe Tool (P)");
+      } else if (e.key === "h" || e.key === "H") {
+        setToolMode("hand");
+        showToast("Hand Tool (H)");
+      } else if (e.key === ",") {
+        // Insert Subclip into Timeline
+        e.preventDefault();
+        handleInsertYouTubeClip({ title: "Subclip Insert", durationMs: 4000, source: "Source Monitor" });
+      } else if (e.key === ".") {
+        // Overwrite Subclip into Timeline
+        e.preventDefault();
+        handleInsertYouTubeClip({ title: "Subclip Overwrite", durationMs: 4000, source: "Source Monitor" });
       } else if (e.code === "ArrowLeft") {
         e.preventDefault();
         setCurrentTimeMs((t) => Math.max(0, t - 33.33));
       } else if (e.code === "ArrowRight") {
         e.preventDefault();
         setCurrentTimeMs((t) => Math.min(totalDurationMs, t + 33.33));
-      } else if (e.key === "v" || e.key === "V") {
-        setToolMode("select");
-      } else if (e.key === "c" || e.key === "C") {
-        setToolMode("razor");
       } else if (e.key === "s" || e.key === "S") {
         handleSplitAtPlayhead();
       } else if (e.key === "Delete" || e.key === "Backspace") {
@@ -190,20 +272,28 @@ export default function StudioEditorPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [totalDurationMs, selectedClipId, clips, history, future, currentTimeMs]);
 
-  // Playhead Animation Loop
+  // Playhead Animation Loop with J-K-L Shuttle Support
   useEffect(() => {
     if (!isPlaying) return;
+    const speed = shuttleSpeed === 0 ? 1 : shuttleSpeed;
     const interval = setInterval(() => {
       setCurrentTimeMs((curr) => {
-        if (curr >= totalDurationMs) {
+        const next = curr + (40 * speed);
+        if (next >= totalDurationMs) {
           setIsPlaying(false);
+          setShuttleSpeed(0);
+          return totalDurationMs;
+        }
+        if (next <= 0) {
+          setIsPlaying(false);
+          setShuttleSpeed(0);
           return 0;
         }
-        return curr + 40;
+        return next;
       });
     }, 40);
     return () => clearInterval(interval);
-  }, [isPlaying, totalDurationMs]);
+  }, [isPlaying, totalDurationMs, shuttleSpeed]);
 
   // Save State to History before mutation
   const pushHistory = () => {
@@ -432,17 +522,29 @@ export default function StudioEditorPage() {
     <div className="flex flex-col h-screen w-screen bg-studio-950 text-slate-100 overflow-hidden font-sans">
       {/* 1. Header Toolbar */}
       <Header
-        projectTitle="Quantum Supremacy 2026"
+        projectTitle={projectTitle}
         previewQuality={previewQuality}
         onQualityChange={setPreviewQuality}
         activeStage={activeStage}
         onStageSelect={(stage) => {
           setActiveStage(stage);
-          if (stage === "youtube") setLeftTab("youtube");
-          else if (stage === "voice") setLeftTab("voice");
-          else if (stage === "script") setLeftTab("script");
-          else if (stage === "graphics") setLeftTab("assets");
-          else if (stage === "render") setIsExportModalOpen(true);
+          if (stage === "script") {
+            setActiveWorkspace("script");
+            setLeftTab("script");
+          } else if (stage === "youtube") {
+            setActiveWorkspace("clipfinder");
+            setLeftTab("youtube");
+          } else if (stage === "voice") {
+            setActiveWorkspace("cleanup");
+            setLeftTab("voice");
+          } else if (stage === "graphics") {
+            setActiveWorkspace("remotion");
+            setLeftTab("assets");
+          } else if (stage === "timeline") {
+            setActiveWorkspace("edit");
+          } else if (stage === "render") {
+            setActiveWorkspace("publish");
+          }
         }}
         activeWorkspace={activeWorkspace}
         onWorkspaceChange={setActiveWorkspace}
@@ -453,10 +555,29 @@ export default function StudioEditorPage() {
         onExport={handleExport}
         onToggleCopilot={() => setIsCopilotOpen(!isCopilotOpen)}
         isCopilotOpen={isCopilotOpen}
+        onSelectProjectPreset={handleSelectProjectPreset}
       />
 
-      {/* 2. Middle Work Area (Switches seamlessly between Edit, ClipFinder, VO Cleanup, Remotion 3D, Color, Audio, Director, and Publish suites) */}
+      {/* 2. Middle Work Area (Switches seamlessly between Edit, Script & Research, ClipFinder, VO Cleanup, Remotion 3D, Color, Audio, Director, and Publish suites) */}
       <div className="flex-1 flex overflow-hidden">
+        {activeWorkspace === "script" && (
+          <ResearchScriptWorkspace
+            onSendToVoiceover={() => {
+              setActiveWorkspace("cleanup");
+              setActiveStage("voice");
+            }}
+            onSendToClipFinder={() => {
+              setActiveWorkspace("clipfinder");
+              setActiveStage("youtube");
+            }}
+            onPushToTimeline={() => {
+              setActiveWorkspace("edit");
+              setActiveStage("timeline");
+              showToast("Pushed research scenes to multi-track timeline");
+            }}
+            onShowToast={showToast}
+          />
+        )}
         {activeWorkspace === "clipfinder" && (
           <ClipFinderWorkspace
             onInsertClip={(title, durationMs) => {
@@ -694,7 +815,7 @@ export default function StudioEditorPage() {
       {/* 3. Bottom Timeline Section */}
       {(activeWorkspace === "edit" || isTimelineDocked) && (
         <div className={`${activeWorkspace === "edit" ? "h-72" : "h-56"} bg-studio-950 flex flex-col border-t border-studio-800 flex-shrink-0 select-none`}>
-          {/* Timeline Action Bar (Select V, Razor C, Snap, Split, Zoom) */}
+          {/* Timeline Action Bar (Premiere Pro 8-Tool Palette & J-K-L Shuttle) */}
           <TimelineToolbar
             toolMode={toolMode}
             onToolModeChange={setToolMode}
@@ -709,18 +830,37 @@ export default function StudioEditorPage() {
             onSplitAtPlayhead={handleSplitAtPlayhead}
             onDeleteSelected={handleDeleteSelected}
             hasSelection={selectedClipId !== null}
+            inPointMs={inPointMs}
+            outPointMs={outPointMs}
+            onSetInPoint={() => {
+              setInPointMs(currentTimeMs);
+              showToast(`Marked IN: ${Math.round(currentTimeMs)}ms`);
+            }}
+            onSetOutPoint={() => {
+              setOutPointMs(currentTimeMs);
+              showToast(`Marked OUT: ${Math.round(currentTimeMs)}ms`);
+            }}
+            onClearInOut={() => {
+              setInPointMs(null);
+              setOutPointMs(null);
+              showToast("Cleared In/Out Work Area");
+            }}
+            onAddMarker={() => showToast(`Added Marker at ${Math.round(currentTimeMs/1000)}s`)}
+            shuttleSpeed={shuttleSpeed}
           />
 
-          {/* Timeline Timecode Ruler */}
+          {/* Timeline Timecode Ruler (SMPTE Drop-Frame + In/Out Range) */}
           <TimelineRuler
             totalDurationMs={totalDurationMs}
             currentTimeMs={currentTimeMs}
             zoomScale={zoomScale}
             onSeek={setCurrentTimeMs}
             headerWidth={HEADER_WIDTH}
+            inPointMs={inPointMs}
+            outPointMs={outPointMs}
           />
 
-          {/* Multi-Track Canvas */}
+          {/* Multi-Track Canvas (Premiere Multi-Track Anatomy + Rubberbands + fx Badges) */}
           <TimelineCanvas
             tracks={tracks}
             clips={clips}
@@ -746,7 +886,15 @@ export default function StudioEditorPage() {
             onTrackToggleHide={(id) =>
               setTracks((ts) => ts.map((t) => (t.id === id ? { ...t, hidden: !t.hidden } : t)))
             }
+            onTrackToggleSolo={(id) =>
+              setTracks((ts) => ts.map((t) => (t.id === id ? { ...t, soloed: !t.soloed } : t)))
+            }
+            onTrackTogglePatchSource={(id) =>
+              setTracks((ts) => ts.map((t) => (t.id === id ? { ...t, isPatchSource: !t.isPatchSource } : t)))
+            }
             headerWidth={HEADER_WIDTH}
+            inPointMs={inPointMs}
+            outPointMs={outPointMs}
           />
         </div>
       )}
