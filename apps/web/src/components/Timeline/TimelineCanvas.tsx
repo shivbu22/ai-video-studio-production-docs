@@ -227,6 +227,15 @@ export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
                     key={clip.id}
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (toolMode === "razor") {
+                        const rect = canvasRef.current?.getBoundingClientRect();
+                        if (rect) {
+                          const clickX = e.clientX - rect.left;
+                          const clickedMs = Math.max(0, (clickX / zoomScale) * 1000);
+                          onClipSplit(clip.id, clickedMs);
+                          return;
+                        }
+                      }
                       onSelectClip(clip.id);
                     }}
                     style={{
