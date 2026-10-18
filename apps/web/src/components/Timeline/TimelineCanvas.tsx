@@ -1,9 +1,16 @@
-"use client";
+﻿"use client";
 
 import React, { useRef, useState } from "react";
 import { TrackConfig, TrackHeader } from "./TrackHeader";
 import { ToolMode } from "./TimelineToolbar";
 import { Sparkles, Volume2, Move, Scissors } from "lucide-react";
+
+export type TransitionType = "none" | "crossDissolve" | "dipToBlack" | "dipToWhite" | "wipeRight" | "zoomBlur";
+
+export interface ClipTransition {
+  type: TransitionType;
+  durationMs: number;
+}
 
 export interface TimelineClip {
   id: string;
@@ -18,6 +25,16 @@ export interface TimelineClip {
   ducked?: boolean;
   hasFx?: boolean;
   gainDb?: number;
+  transitionIn?: ClipTransition;
+  transitionOut?: ClipTransition;
+  keyframes?: Array<{ property: string; timeMs: number; value: number }>;
+}
+
+export interface PeerCollaborator {
+  id: string;
+  name: string;
+  color: string;
+  playheadMs: number;
 }
 
 interface TimelineCanvasProps {
@@ -41,6 +58,7 @@ interface TimelineCanvasProps {
   headerWidth: number;
   inPointMs?: number | null;
   outPointMs?: number | null;
+  collaborators?: PeerCollaborator[];
 }
 
 export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
@@ -64,6 +82,7 @@ export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
   headerWidth,
   inPointMs = null,
   outPointMs = null,
+  collaborators = [],
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const totalSeconds = Math.ceil(totalDurationMs / 1000);
@@ -228,7 +247,7 @@ export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       if (toolMode === "razor") {
-                        const rect = canvasRef.current?.getBoundingClientRect();
+                        const rect = containerRef.current?.getBoundingClientRect();
                         if (rect) {
                           const clickX = e.clientX - rect.left;
                           const clickedMs = Math.max(0, (clickX / zoomScale) * 1000);
@@ -260,6 +279,16 @@ export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
                     >
                       <span className="text-[10px] font-mono font-black text-white pl-0.5">[</span>
                     </div>
+
+                    {/* Transition In Badge */}
+                    {clip.transitionIn && clip.transitionIn.type !== "none" && (
+                      <div 
+                        title={`In Transition: ${clip.transitionIn.type} (${clip.transitionIn.durationMs}ms)`}
+                        className="absolute left-0 top-0 bottom-0 w-5 bg-gradient-to-r from-indigo-500/80 to-transparent border-r border-indigo-400/60 z-10 pointer-events-none flex items-center justify-start pl-0.5"
+                      >
+                        <span className="text-[8px] font-black font-mono text-white leading-none rotate-90">◪</span>
+                      </div>
+                    )}
 
                     {/* Clip Header Bar */}
                     <div className="h-4 bg-black/40 border-b border-white/10 px-1.5 flex items-center justify-between text-[10px] font-semibold text-slate-100 z-10">
@@ -333,6 +362,16 @@ export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
 
                     {/* Crossfade Corner Dog-Ear */}
                     <div className="crossfade-dogear right-0" />
+
+                    {/* Transition Out Badge */}
+                    {clip.transitionOut && clip.transitionOut.type !== "none" && (
+                      <div 
+                        title={`Out Transition: ${clip.transitionOut.type} (${clip.transitionOut.durationMs}ms)`}
+                        className="absolute right-0 top-0 bottom-0 w-5 bg-gradient-to-l from-indigo-500/80 to-transparent border-l border-indigo-400/60 z-10 pointer-events-none flex items-center justify-end pr-0.5"
+                      >
+                        <span className="text-[8px] font-black font-mono text-white leading-none -rotate-90">◪</span>
+                      </div>
+                    )}
 
                     {/* Right Trim Bracket Handle */}
                     <div

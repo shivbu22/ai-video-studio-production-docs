@@ -1,4 +1,4 @@
-import pytest
+﻿import pytest
 from fastapi.testclient import TestClient
 from services.api.src.main import app
 
@@ -117,3 +117,21 @@ def test_billing_status_unmetered():
     assert data["is_unmetered"] is True
     assert data["credits_balance"] == "UNLIMITED"
     assert data["price_per_minute"] == 0
+
+def test_all_14_mcp_tools():
+    res = client.post("/v1/mcp", json={
+        "jsonrpc": "2.0",
+        "method": "tools/list",
+        "id": 100
+    })
+    assert res.status_code == 200
+    tools = res.json()["result"]["tools"]
+    tool_names = [t["name"] for t in tools]
+    assert len(tool_names) == 14
+    assert "research_topic" in tool_names
+    assert "script_generate" in tool_names
+    assert "audio_cleanup_silences" in tool_names
+    assert "captions_align_words" in tool_names
+    assert "motion_insert_template" in tool_names
+    assert "color_grade_apply" in tool_names
+    assert "publish_pack_generate" in tool_names

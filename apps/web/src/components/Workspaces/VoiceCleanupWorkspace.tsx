@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import { 
@@ -280,7 +280,7 @@ export const VoiceCleanupWorkspace: React.FC<VoiceCleanupWorkspaceProps> = ({
           )}
 
           <p className="text-[10px] text-slate-400 leading-tight">
-            Record once and keep talking. SlotStudio cuts every breath, filler word, and false start without clipping a single phoneme.
+            Record once and keep talking. OmniCut cuts every breath, filler word, and false start without clipping a single phoneme.
           </p>
         </div>
 
@@ -427,7 +427,7 @@ export const VoiceCleanupWorkspace: React.FC<VoiceCleanupWorkspaceProps> = ({
 
         {/* Main Stage: Waveform Visualizer & Transcript */}
         <div className="flex-1 flex flex-col p-8 items-center justify-center space-y-6 overflow-y-auto">
-          {/* SlotStudio Headline Callout */}
+          {/* OmniCut Headline Callout */}
           <div className="text-center max-w-xl">
             <h2 className="text-xl font-extrabold text-white tracking-tight">
               Every breath. Every um. Gone.

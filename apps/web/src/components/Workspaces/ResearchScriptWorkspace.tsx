@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { 
@@ -313,7 +313,7 @@ export const ResearchScriptWorkspace: React.FC<ResearchScriptWorkspaceProps> = (
         <div className="h-10 px-4 border-b border-slate-800 bg-[#12151b] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-amber-400" />
-            <span className="text-xs font-semibold text-white">3D Scientific Paper Inspector (SlotStudio Method)</span>
+            <span className="text-xs font-semibold text-white">3D Scientific Paper Inspector (OmniCut Method)</span>
             <span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-mono">
               Peer-Reviewed Source Verified
             </span>

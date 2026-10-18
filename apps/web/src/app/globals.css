@@ -1,11 +1,11 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
-  /* Slot Studio Color Palette (https://slotstudio.app/css/base.css) */
+  /* OMNICUT Color Palette (https://OmniCut.app/css/base.css) */
   --bg: #05060a;
   --bg-1: #0a0c12;
   --bg-2: #10131b;
@@ -65,7 +65,7 @@ nextjs-portal {
   background: var(--line-3);
 }
 
-/* Slot Studio Button Styles */
+/* OMNICUT Button Styles */
 .btn-slot {
   display: inline-flex;
   align-items: center;
@@ -99,7 +99,7 @@ nextjs-portal {
   box-shadow: 0 6px 22px rgba(59, 99, 255, 0.55);
 }
 
-/* Slot Studio Liquid Glass */
+/* OMNICUT Liquid Glass */
 .glass-slot {
   position: relative;
   border-radius: 18px;

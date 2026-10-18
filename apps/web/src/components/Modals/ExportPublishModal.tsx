@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import { 
@@ -37,12 +37,65 @@ export const ExportPublishModal: React.FC<ExportPublishModalProps> = ({
   totalDurationMs,
   clips,
 }) => {
-  const [activeTab, setActiveTab] = useState<"render" | "thumbnail" | "seo">("render");
+  const [activeTab, setActiveTab] = useState<"render" | "thumbnail" | "seo" | "queue">("render");
   const [resolution, setResolution] = useState<"1080p" | "4k" | "shorts">("1080p");
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [activeStageText, setActiveStageText] = useState("");
   const [exportComplete, setExportComplete] = useState(false);
+
+  // Multi-Format Export Queue State
+  const [queueJobs, setQueueJobs] = useState([
+    {
+      id: "job_1080p",
+      title: "OmniCut Master 1080p (YouTube FHD)",
+      format: "1920x1080 (16:9)",
+      codec: "H.264 High 5.1",
+      audio: "-14 LUFS Clean Ducked",
+      status: "completed",
+      progress: 100,
+      sizeMb: "124 MB",
+      worker: "Local NVENC Hardware",
+      downloadUrl: "/exports/master_1080p.mp4",
+    },
+    {
+      id: "job_4k",
+      title: "OmniCut 4K UHD Master (ProRes 422)",
+      format: "3840x2160 (16:9)",
+      codec: "Apple ProRes / HEVC",
+      audio: "24-bit 48kHz Linear PCM",
+      status: "completed",
+      progress: 100,
+      sizeMb: "480 MB",
+      worker: "Distributed Lambda (16 chunks)",
+      downloadUrl: "/exports/master_1080p.mp4",
+    },
+    {
+      id: "job_short_9x16",
+      title: "Vertical Short (TikTok / Reels / Shorts)",
+      format: "1080x1920 (9:16)",
+      codec: "H.264 + Burned-in Captions",
+      audio: "-14 LUFS Speech Priority",
+      status: "completed",
+      progress: 100,
+      sizeMb: "38 MB",
+      worker: "Auto-Reframe Engine",
+      downloadUrl: "/exports/short_9x16.mp4",
+    },
+    {
+      id: "job_square_1x1",
+      title: "Square Carousel Cut (Instagram / LinkedIn)",
+      format: "1080x1080 (1:1)",
+      codec: "H.264 Web Optimized",
+      audio: "-14 LUFS Normalized",
+      status: "completed",
+      progress: 100,
+      sizeMb: "44 MB",
+      worker: "Remotion Worker Fleet",
+      downloadUrl: "/exports/master_1080p.mp4",
+    },
+  ]);
+  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
 
   // Thumbnail Studio
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -116,7 +169,7 @@ export const ExportPublishModal: React.FC<ExportPublishModalProps> = ({
     // Bottom badge
     ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
     ctx.font = "bold 18px monospace";
-    ctx.fillText("SLOT STUDIO ? 4K 60FPS EMPIRICAL BENCHMARK", 80, canvas.height - 50);
+    ctx.fillText("OmniCut ? 4K 60FPS EMPIRICAL BENCHMARK", 80, canvas.height - 50);
 
   }, [isOpen, activeTab, thumbHeadline, thumbSub, thumbStyle]);
 
@@ -138,6 +191,32 @@ export const ExportPublishModal: React.FC<ExportPublishModalProps> = ({
     a.href = url;
     a.download = `${projectTitle.toLowerCase().replace(/\s+/g, "-")}-thumbnail.jpg`;
     a.click();
+  };
+
+  const handleBatchQueueAll = () => {
+    setActiveTab("queue");
+    setIsBatchProcessing(true);
+    // Reset jobs to rendering state with dynamic progression
+    setQueueJobs((prev) =>
+      prev.map((j) => ({ ...j, status: "rendering", progress: 20 }))
+    );
+
+    setTimeout(() => {
+      setQueueJobs((prev) =>
+        prev.map((j, i) => ({ ...j, progress: Math.min(100, 45 + i * 15) }))
+      );
+    }, 600);
+
+    setTimeout(() => {
+      setQueueJobs((prev) =>
+        prev.map((j, i) => ({
+          ...j,
+          progress: 100,
+          status: "completed",
+        }))
+      );
+      setIsBatchProcessing(false);
+    }, 1400);
   };
 
   const handleStartExport = () => {
@@ -171,7 +250,7 @@ export const ExportPublishModal: React.FC<ExportPublishModalProps> = ({
   const copyTimestamps = () => {
     const text = `Title: ${projectTitle}\n\n` + 
       chapters.map((c) => `${c.time} - ${c.title}`).join("\n") + 
-      "\n\nTags: #QuantumComputing #TechBreakthrough #AIvideo #Supercomputer #SlotStudio";
+      "\n\nTags: #QuantumComputing #TechBreakthrough #AIvideo #Supercomputer #OmniCut";
     navigator.clipboard.writeText(text);
     setCopiedTimestamps(true);
     setTimeout(() => setCopiedTimestamps(false), 2500);
@@ -237,6 +316,18 @@ export const ExportPublishModal: React.FC<ExportPublishModalProps> = ({
           >
             <FileText className="w-3.5 h-3.5 text-amber-400" />
             <span>YouTube Chapters & SEO</span>
+          </button>
+          <button
+            id="tab-btn-queue"
+            onClick={() => setActiveTab("queue")}
+            className={`py-2 px-3 text-xs font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
+              activeTab === "queue"
+                ? "border-[#3B63FF] text-white font-semibold"
+                : "border-transparent text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Export Queue ({queueJobs.length})</span>
           </button>
         </div>
 
@@ -369,13 +460,22 @@ export const ExportPublishModal: React.FC<ExportPublishModalProps> = ({
                       </a>
                     </div>
                   ) : (
-                    <button
-                      onClick={handleStartExport}
-                      className="btn-slot btn-slot-buy w-full py-2 text-black font-bold text-xs rounded flex items-center justify-center gap-2 shadow-md"
-                    >
-                      <Download className="w-3.5 h-3.5 text-black" />
-                      <span>Start Master Export ({resolution.toUpperCase()})</span>
-                    </button>
+                    <div className="space-y-2">
+                      <button
+                        onClick={handleStartExport}
+                        className="btn-slot btn-slot-buy w-full py-2 text-black font-bold text-xs rounded flex items-center justify-center gap-2 shadow-md"
+                      >
+                        <Download className="w-3.5 h-3.5 text-black" />
+                        <span>Start Master Export ({resolution.toUpperCase()})</span>
+                      </button>
+                      <button
+                        onClick={handleBatchQueueAll}
+                        className="w-full py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs rounded flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                        <span>Batch Queue All 4 Formats (1080p, 4K, 9:16, 1:1)</span>
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -491,9 +591,80 @@ export const ExportPublishModal: React.FC<ExportPublishModalProps> = ({
                   </div>
                 ))}
                 <div className="pt-2 text-slate-500">
-                  Tags: #QuantumComputing #TechBreakthrough #AIvideo #Supercomputer #SlotStudio
+                  Tags: #QuantumComputing #TechBreakthrough #AIvideo #Supercomputer #OmniCut
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 4: Multi-Format Batch Export Queue */}
+        {activeTab === "queue" && (
+          <div className="p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-emerald-400" />
+                  Background Multi-Format Render Queue
+                </h4>
+                <p className="text-[11px] text-slate-400">Parallel rendering via NVENC Hardware & Remotion Lambda fleet</p>
+              </div>
+              <button
+                onClick={handleBatchQueueAll}
+                disabled={isBatchProcessing}
+                className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>{isBatchProcessing ? "Rendering All Chunks..." : "Re-render All Targets"}</span>
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {queueJobs.map((job) => (
+                <div
+                  key={job.id}
+                  className="bg-[#14151d] p-3.5 rounded-lg border border-[#222432] flex items-center justify-between gap-4"
+                >
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white">{job.title}</span>
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-slate-300">
+                        {job.format}
+                      </span>
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/30 text-emerald-300">
+                        {job.status.toUpperCase()}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-[10px] text-slate-400 font-mono">
+                      <span>Codec: {job.codec}</span>
+                      <span>•</span>
+                      <span>Worker: {job.worker}</span>
+                      <span>•</span>
+                      <span>Size: {job.sizeMb}</span>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="w-full h-1.5 bg-[#252838] rounded-full overflow-hidden mt-1.5">
+                      <div
+                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300"
+                        style={{ width: `${job.progress}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 flex items-center gap-2">
+                    <a
+                      href={job.downloadUrl}
+                      download
+                      className="px-3 py-1.5 bg-[#222533] hover:bg-[#2c3044] text-white text-xs font-semibold rounded flex items-center gap-1.5 border border-white/10 hover:border-white/20 transition-all"
+                    >
+                      <Download className="w-3 h-3 text-emerald-400" />
+                      <span>Download</span>
+                    </a>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

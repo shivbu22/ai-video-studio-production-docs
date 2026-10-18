@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { X, Sparkles, Key, Check, ShieldCheck, Zap, Video, Mic, Image as ImageIcon, ExternalLink } from "lucide-react";
@@ -31,7 +31,7 @@ export const ConnectionsModal: React.FC<ConnectionsModalProps> = ({ isOpen, onCl
         {/* Header */}
         <div className="px-5 py-4 bg-[#10131b] border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            {/* Slot Studio 3-pill logo */}
+            {/* OmniCut 3-pill logo */}
             <svg viewBox="0 0 64 36" className="w-6 h-3.5">
               <rect x="1.5" y="1.5" width="16" height="33" rx="6.5" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="3"/>
               <rect x="24" y="0" width="16" height="36" rx="7" fill="#3B63FF"/>
@@ -55,7 +55,7 @@ export const ConnectionsModal: React.FC<ConnectionsModalProps> = ({ isOpen, onCl
 
         <div className="p-5 space-y-5 text-xs text-slate-200">
           <p className="text-[11px] text-slate-400 leading-relaxed">
-            Plug in your AI tools once. Slot Studio uses them directly inside the edit—no manual exporting or importing.
+            Plug in your AI tools once. OmniCut uses them directly inside the edit—no manual exporting or importing.
           </p>
 
           {/* Toggle List */}

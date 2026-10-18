@@ -1,11 +1,11 @@
 {
-  "name": "ai-video-studio",
+  "name": "omnicut",
   "version": "1.0.0",
   "private": true,
-  "description": "Browser-native AI video studio platform with Remotion and MCP",
+  "description": "OmniCut — Professional AI-powered non-linear video editor",
   "scripts": {
-    "dev:web": "pnpm --filter @ai-video-studio/web dev",
-    "dev:remotion": "pnpm --filter @ai-video-studio/remotion dev",
+    "dev:web": "pnpm --filter @omnicut/web dev",
+    "dev:remotion": "pnpm --filter @omnicut/remotion dev",
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
     "lint": "pnpm -r run lint",

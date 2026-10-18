@@ -5,6 +5,7 @@ from .config import settings
 from .routers.projects import projects_router
 from .routers.mcp_server import mcp_router
 from .routers.billing import billing_router
+from .routers.audit_ledger import router as audit_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -25,6 +26,7 @@ app.add_middleware(
 app.include_router(projects_router, prefix="/v1")
 app.include_router(mcp_router, prefix="/v1")
 app.include_router(billing_router, prefix="/v1")
+app.include_router(audit_router, prefix="/v1")
 
 @app.get("/health")
 async def health_check():

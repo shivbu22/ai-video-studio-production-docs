@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { 
@@ -105,7 +105,7 @@ export const ClipFinderWorkspace: React.FC<ClipFinderWorkspaceProps> = ({
             <span className="text-xs font-bold text-white tracking-wide">SMART SCRIPT CLIP FINDER</span>
           </div>
           <span className="text-[10px] bg-violet-500/20 text-violet-300 border border-violet-500/30 px-1.5 py-0.5 rounded font-mono">
-            SlotStudio v2.4
+            OmniCut v2.4
           </span>
         </div>
 
@@ -135,7 +135,7 @@ export const ClipFinderWorkspace: React.FC<ClipFinderWorkspaceProps> = ({
         {/* Script Line List */}
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
           <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-            Script Scene Sequence (SlotStudio Intake)
+            Script Scene Sequence (OmniCut Intake)
           </div>
           {scriptLines.map((line) => {
             const isSelected = selectedScriptLine === line.id;
@@ -180,7 +180,7 @@ export const ClipFinderWorkspace: React.FC<ClipFinderWorkspaceProps> = ({
             <div className="flex items-center justify-between mb-1 text-[10px]">
               <span className="text-amber-400 font-bold uppercase tracking-wide flex items-center gap-1">
                 <FileText className="w-3 h-3 text-amber-400" />
-                Paper Ingestion (SlotStudio Method)
+                Paper Ingestion (OmniCut Method)
               </span>
               <span className="bg-amber-500/20 text-amber-300 text-[9px] px-1 rounded border border-amber-500/30 font-mono">
                 Extracted

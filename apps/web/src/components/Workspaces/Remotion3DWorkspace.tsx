@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { 
@@ -379,7 +379,7 @@ export const Remotion3DWorkspace: React.FC<Remotion3DWorkspaceProps> = ({
 
               {/* Glass Tier List Floating Overlay in Top Right */}
               <div className="bg-black/60 backdrop-blur-md border border-slate-700 p-2.5 rounded-lg text-xs max-w-[200px] shadow-xl">
-                <p className="font-bold text-amber-400 text-[11px] mb-1">SLOT STUDIO ENGINE</p>
+                <p className="font-bold text-amber-400 text-[11px] mb-1">OmniCut ENGINE</p>
                 <p className="text-slate-300 text-[10px] leading-tight">
                   Edits every cut or graphic every 2 to 3 seconds.
                 </p>

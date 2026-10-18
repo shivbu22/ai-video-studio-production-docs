@@ -26,6 +26,8 @@ interface AIDirectorWorkspaceProps {
   onRejectProposal: (proposalId: string) => void;
   onExecuteCommand: (prompt: string) => void;
   onShowToast: (msg: string) => void;
+  onOpenStoryboard?: () => void;
+  onApplySwarmEdits?: () => void;
 }
 
 export const AIDirectorWorkspace: React.FC<AIDirectorWorkspaceProps> = ({
@@ -34,9 +36,38 @@ export const AIDirectorWorkspace: React.FC<AIDirectorWorkspaceProps> = ({
   onRejectProposal,
   onExecuteCommand,
   onShowToast,
+  onOpenStoryboard,
+  onApplySwarmEdits,
 }) => {
   const [selectedProposalId, setSelectedProposalId] = useState<string>(proposals[0]?.id || "");
   const [refinePrompt, setRefinePrompt] = useState("");
+  const [isDebating, setIsDebating] = useState(false);
+  const [debateRounds, setDebateRounds] = useState<any[]>([
+    {
+      agent: "Narrative Architect",
+      color: "border-purple-500/50 bg-purple-500/10 text-purple-200",
+      avatarColor: "bg-purple-600",
+      message: "Audience drop-off analysis indicates viewers leave at 0:04 without an immediate visual hook. We should front-load the Sycamore 200s speedup counter right at second 1, then compress scene 2 duration from 5.0s to 3.2s.",
+    },
+    {
+      agent: "Visual Director",
+      color: "border-cyan-500/50 bg-cyan-500/10 text-cyan-200",
+      avatarColor: "bg-cyan-600",
+      message: "Agreed on the hook. Let's also swap the generic dilution refrigerator wide shot for the 4K macro qubit optical zoom on track V1. Applying a Moody Teal & Orange LUT (+15% contrast) will give it high-end cinematic pop.",
+    },
+    {
+      agent: "Sound Designer",
+      color: "border-emerald-500/50 bg-emerald-500/10 text-emerald-200",
+      avatarColor: "bg-emerald-600",
+      message: "With the faster pace, the cybernetic horizon music bed needs an exponential -14dB ducking curve right under the word 'supercomputers' to maintain broadcast -14 LUFS dialog clarity.",
+    },
+    {
+      agent: "Executive Producer",
+      color: "border-amber-500/50 bg-amber-500/10 text-amber-200",
+      avatarColor: "bg-amber-600",
+      message: "All proposals comply with the 30s Instagram/TikTok retention curve. Consensus reached (98.4% confidence). Ready to execute atomic timeline patch.",
+    },
+  ]);
 
   const activeProposal = proposals.find((p) => p.id === selectedProposalId) || proposals[0];
 
@@ -156,6 +187,104 @@ export const AIDirectorWorkspace: React.FC<AIDirectorWorkspaceProps> = ({
               className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md transition-all active:scale-95 flex-shrink-0"
             >
               Auto-Fix Pacing
+            </button>
+          </div>
+        </div>
+
+        {/* Multi-Agent Autonomous Director Debate Swarm */}
+        <div className="bg-studio-900 rounded-xl border border-studio-800 p-4 space-y-4 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded bg-purple-600 flex items-center justify-center text-white shadow-sm">
+                <Bot className="w-3.5 h-3.5 text-white" />
+              </div>
+              <div>
+                <span className="font-bold text-slate-200 text-xs uppercase tracking-wider">Multi-Agent Creative Consensus Swarm</span>
+                <span className="text-[10px] text-slate-400 font-mono ml-2">4 Agents · Consensus 98.4%</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {onOpenStoryboard && (
+                <button
+                  id="btn-open-storyboard-modal"
+                  onClick={onOpenStoryboard}
+                  className="px-2.5 py-1 rounded bg-[#202232] hover:bg-[#2c2f44] text-slate-300 hover:text-white border border-[#2e3146] text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                >
+                  <Film className="w-3 h-3 text-purple-400" />
+                  <span>Storyboard Diffuser</span>
+                </button>
+              )}
+              <button
+                id="btn-run-director-debate"
+                onClick={async () => {
+                  setIsDebating(true);
+                  try {
+                    const res = await fetch("/api/director/debate", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ userIntent: "Optimize for viral retention", projectTitle: "Quantum Supremacy" }),
+                    });
+                    const data = await res.json();
+                    if (data.success && data.debateRounds) {
+                      setDebateRounds(data.debateRounds.map((r: any) => ({
+                        ...r,
+                        color: r.avatarColor.includes("purple") ? "border-purple-500/50 bg-purple-500/10 text-purple-200" :
+                               r.avatarColor.includes("cyan") ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-200" :
+                               r.avatarColor.includes("emerald") ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-200" :
+                               "border-amber-500/50 bg-amber-500/10 text-amber-200"
+                      })));
+                      onShowToast("Multi-Agent Debate Swarm Reached 98.4% Consensus!");
+                    }
+                  } catch (e) {
+                    console.error(e);
+                  } finally {
+                    setIsDebating(false);
+                  }
+                }}
+                disabled={isDebating}
+                className="px-3 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50"
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>Run Swarm Debate</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 4 Agent Speech Bubbles Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {debateRounds.map((round: any, i: number) => (
+              <div key={i} className={`p-3 rounded-lg border ${round.color} space-y-1.5`}>
+                <div className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-full ${round.avatarColor} text-white flex items-center justify-center text-[9px] font-bold shadow-sm`}>
+                    {round.agent[0]}
+                  </div>
+                  <span className="text-[11px] font-bold text-white">{round.agent}</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-slate-300 font-sans">
+                  {round.message}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Atomic Execution Action Banner */}
+          <div className="p-3 rounded-lg bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border border-purple-500/40 flex items-center justify-between">
+            <div>
+              <span className="text-xs font-bold text-white block">Autonomous Pacing & B-Roll Re-Cut Package</span>
+              <span className="text-[10px] text-slate-400">Trims Scene 2 to 3.2s, swaps B-roll to 4K Macro Qubit, sets -14dB audio ducking.</span>
+            </div>
+
+            <button
+              id="btn-execute-director-swarm"
+              onClick={() => {
+                if (onApplySwarmEdits) onApplySwarmEdits();
+                onShowToast("Executed Multi-Agent Timeline Re-Cut Package!");
+              }}
+              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs rounded-lg shadow-lg flex items-center gap-1.5 transition-all hover:scale-105"
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-300" />
+              <span>Execute Multi-Agent Timeline Re-Cut</span>
             </button>
           </div>
         </div>

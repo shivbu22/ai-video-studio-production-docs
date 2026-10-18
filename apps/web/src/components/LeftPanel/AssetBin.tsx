@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { 
@@ -24,21 +24,76 @@ export interface MotionTemplateItem {
   defaultProps: any;
 }
 
+export interface UploadedClip { id: string; name: string; url: string; type: "video" | "audio" | "image"; duration: string; }
+
 interface AssetBinProps {
+  onAddUploadedClip?: (clip: UploadedClip) => void;
   onInsertTemplate: (templateId: string, props: any) => void;
   onApplyLut: (lutName: string) => void;
   onUploadMedia: () => void;
+  onOpenAutoBRoll?: () => void;
 }
 
 export const AssetBin: React.FC<AssetBinProps> = ({
+  onAddUploadedClip,
   onInsertTemplate,
   onApplyLut,
   onUploadMedia,
+  onOpenAutoBRoll,
 }) => {
   const [activeFolder, setActiveFolder] = useState<"motion" | "footage" | "voice">("motion");
   const [hoveredClipId, setHoveredClipId] = useState<string | null>(null);
   const [scrubPercent, setScrubPercent] = useState<number>(0);
   const [insertedId, setInsertedId] = useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedClip[]>([]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Allowed MIME type whitelist
+    const allowedPrefixes = ["video/", "audio/", "image/"];
+    const maxFileSize = 500 * 1024 * 1024; // 500MB client guard
+    const newClips: UploadedClip[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      // File size enforcement
+      if (file.size > maxFileSize) {
+        continue;
+      }
+
+      // MIME type verification
+      const isAllowed = allowedPrefixes.some((prefix) => file.type.startsWith(prefix));
+      if (!isAllowed) {
+        continue;
+      }
+
+      // Sanitize filename to prevent HTML injection in DOM
+      const sanitizedName = file.name.slice(0, 80).replace(/[<>\/\\&]/g, "_");
+      const url = URL.createObjectURL(file);
+      const isAudio = file.type.startsWith("audio");
+      const isVideo = file.type.startsWith("video");
+
+      const clip: UploadedClip = {
+        id: `upload-${Date.now()}-${i}`,
+        name: sanitizedName,
+        url,
+        type: isAudio ? "audio" : isVideo ? "video" : "image",
+        duration: "00:05:00",
+      };
+      newClips.push(clip);
+      if (onAddUploadedClip) onAddUploadedClip(clip);
+    }
+
+    if (newClips.length > 0) {
+      setUploadedFiles((prev) => [...prev, ...newClips]);
+      setActiveFolder("footage");
+    }
+    e.target.value = "";
+  };
 
   const slotTemplates = [
     {
@@ -93,7 +148,7 @@ export const AssetBin: React.FC<AssetBinProps> = ({
       id: "broll-1",
       name: "RAW_BROLL_CRYOSTAT_4K.MP4",
       duration: "00:18:22",
-      res: "3840x2160 · ProRes 422 HQ",
+      res: "3840x2160 Â· ProRes 422 HQ",
       fps: "60.00 fps",
       previewColor: "from-blue-900 to-slate-900"
     },
@@ -101,7 +156,7 @@ export const AssetBin: React.FC<AssetBinProps> = ({
       id: "broll-2",
       name: "MACRO_QUBIT_ARRAY_60FPS.MP4",
       duration: "00:12:45",
-      res: "3840x2160 · ProRes 422 HQ",
+      res: "3840x2160 Â· ProRes 422 HQ",
       fps: "60.00 fps",
       previewColor: "from-indigo-900 to-slate-900"
     },
@@ -109,7 +164,7 @@ export const AssetBin: React.FC<AssetBinProps> = ({
       id: "broll-3",
       name: "SERVER_FARM_DATA_CLUSTER.MP4",
       duration: "00:24:10",
-      res: "3840x2160 · ProRes 422 HQ",
+      res: "3840x2160 Â· ProRes 422 HQ",
       fps: "60.00 fps",
       previewColor: "from-slate-900 to-cyan-950"
     }
@@ -132,6 +187,14 @@ export const AssetBin: React.FC<AssetBinProps> = ({
     <div className="flex flex-col h-full bg-[#0d0e13] text-slate-100 select-none overflow-hidden font-sans">
       {/* 1. Premiere Pro Bin Folder Selector Bar */}
       <div className="p-2 bg-[#111217] border-b border-[#1c1e27] flex items-center justify-between text-xs">
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileUpload} 
+          multiple 
+          accept="video/*,audio/*,image/*" 
+          className="hidden" 
+        />
         <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveFolder("motion")}
@@ -161,6 +224,18 @@ export const AssetBin: React.FC<AssetBinProps> = ({
             <span>Voice</span>
           </button>
         </div>
+
+        {onOpenAutoBRoll && (
+          <button
+            id="btn-open-auto-broll"
+            onClick={onOpenAutoBRoll}
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-600/50 transition-colors shadow-sm"
+            title="AI Automatic B-Roll Inserter"
+          >
+            <Sparkles className="w-3 h-3 text-cyan-300" />
+            <span>Auto B-Roll</span>
+          </button>
+        )}
       </div>
 
       {/* 2. Folder Content Area */}
@@ -227,9 +302,39 @@ export const AssetBin: React.FC<AssetBinProps> = ({
         {activeFolder === "footage" && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-[11px] text-slate-400 px-0.5">
-              <span className="font-medium text-slate-300">Raw Media Bins ({rawFootageClips.length})</span>
+              <span className="font-medium text-slate-300">Media Bins ({rawFootageClips.length + uploadedFiles.length})</span>
               <span className="text-[10px] font-mono text-[#3B63FF]">Hover to Scrub</span>
             </div>
+
+            {/* Uploaded User Clips */}
+            {uploadedFiles.map((up) => (
+              <div
+                key={up.id}
+                className="bg-[#12131a] border border-[#2e3448] hover:border-[#3B63FF] rounded overflow-hidden transition-all group p-2"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span className="text-xs font-semibold text-white truncate">{up.name}</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20">
+                    USER MEDIA
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mt-1">
+                  <span className="capitalize">{up.type}</span>
+                  <button
+                    onClick={() => {
+                      if (onAddUploadedClip) onAddUploadedClip(up);
+                    }}
+                    className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 bg-[#3B63FF] hover:bg-[#4f73ff] text-white rounded transition-colors"
+                  >
+                    <Plus className="w-2.5 h-2.5" />
+                    <span>Insert into Timeline</span>
+                  </button>
+                </div>
+              </div>
+            ))}
 
             {rawFootageClips.map((clip) => {
               const isHovered = hoveredClipId === clip.id;
@@ -293,7 +398,7 @@ export const AssetBin: React.FC<AssetBinProps> = ({
                 Silences cut from 800ms to 250ms with 15ms cross-fades. -14.0 LUFS broadcast safe.
               </p>
               <div className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">
-                Loudness: -14.0 LUFS · 0 Words Clipped
+                Loudness: -14.0 LUFS Â· 0 Words Clipped
               </div>
             </div>
           </div>

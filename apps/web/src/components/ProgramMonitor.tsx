@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { 
@@ -208,7 +208,7 @@ export const ProgramMonitor: React.FC<ProgramMonitorProps> = ({
           {/* 3D Motion Graphics / Footage Preview Component */}
           {activeStyle === "barchart" && (
             <div className="w-full h-full flex flex-col items-center justify-center p-6 text-white bg-gradient-to-b from-[#0c0e18] to-[#06070a]">
-              <span className="text-[11px] font-bold text-slate-400 tracking-wider uppercase mb-1">Empirical Benchmark (Slot Studio)</span>
+              <span className="text-[11px] font-bold text-slate-400 tracking-wider uppercase mb-1">OmniCut Benchmark</span>
               <h3 className="text-sm font-extrabold text-white mb-6">Quantum Supercomputer Speedup</h3>
               <div className="flex items-end justify-center gap-10 h-32 w-full max-w-sm">
                 <div className="flex flex-col items-center gap-1">

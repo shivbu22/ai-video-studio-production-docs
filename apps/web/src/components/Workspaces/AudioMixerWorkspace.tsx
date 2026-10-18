@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   SlidersVertical, 
   Volume2, 
@@ -97,6 +97,113 @@ export const AudioMixerWorkspace: React.FC<AudioMixerWorkspaceProps> = ({
     return () => clearInterval(interval);
   }, [isPlaying]);
 
+  // Canvas FFT Frequency Spectrum & EQ Curve Visualizer
+  const eqCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = eqCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animId: number;
+
+    const renderSpectrum = () => {
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // Clear with deep studio background
+      ctx.fillStyle = "#050609";
+      ctx.fillRect(0, 0, w, h);
+
+      // Grid lines (dB & Hz)
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
+      ctx.lineWidth = 1;
+      for (let y = 15; y < h; y += 20) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+      for (let x = 30; x < w; x += 45) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+
+      // 32-Band FFT Spectrum Bars (Simulated real-time audio)
+      const numBars = 32;
+      const barWidth = (w - (numBars * 2)) / numBars;
+
+      for (let i = 0; i < numBars; i++) {
+        let barHeight = 0;
+        if (isPlaying) {
+          // Bell curve centered on voice fundamentals (bands 8-18)
+          const distFromCenter = Math.abs(i - 12);
+          const baseHeight = Math.max(4, 38 - distFromCenter * 2.2);
+          barHeight = baseHeight + (Math.sin(Date.now() / 90 + i) * 6) + (Math.random() * 4);
+        } else {
+          barHeight = 4;
+        }
+
+        const barX = i * (barWidth + 2);
+        const barY = h - barHeight;
+
+        // Gradient from cyan to emerald
+        const grad = ctx.createLinearGradient(0, h, 0, barY);
+        grad.addColorStop(0, "rgba(6, 182, 212, 0.2)");
+        grad.addColorStop(1, "rgba(16, 185, 129, 0.85)");
+
+        ctx.fillStyle = grad;
+        ctx.fillRect(barX, barY, barWidth, barHeight);
+      }
+
+      // Smooth Parametric EQ Response Curve
+      const lowY = (h / 2) - (eqLow * 4.5);
+      const midY = (h / 2) - (eqMid * 5.5);
+      const highY = (h / 2) - (eqHigh * 4.5);
+
+      ctx.beginPath();
+      ctx.moveTo(0, h / 2);
+      ctx.bezierCurveTo(w * 0.15, h / 2, w * 0.2, lowY, w * 0.3, lowY);
+      ctx.bezierCurveTo(w * 0.4, lowY, w * 0.45, midY, w * 0.55, midY);
+      ctx.bezierCurveTo(w * 0.65, midY, w * 0.75, highY, w * 0.85, highY);
+      ctx.bezierCurveTo(w * 0.92, highY, w * 0.96, h / 2, w, h / 2);
+
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = "rgba(56, 189, 248, 0.7)";
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+      ctx.shadowBlur = 0; // reset
+
+      // Glowing Node Circles
+      const nodes = [
+        { x: w * 0.25, y: lowY, color: "#06b6d4", label: "100Hz" },
+        { x: w * 0.52, y: midY, color: "#10b981", label: "1.5kHz" },
+        { x: w * 0.82, y: highY, color: "#c084fc", label: "10kHz" },
+      ];
+
+      nodes.forEach((n) => {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = n.color;
+        ctx.fill();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      });
+
+      if (isPlaying) {
+        animId = requestAnimationFrame(renderSpectrum);
+      }
+    };
+
+    renderSpectrum();
+    return () => cancelAnimationFrame(animId);
+  }, [isPlaying, eqLow, eqMid, eqHigh]);
+
   const toggleMute = (id: string) => {
     setChannels((prev) =>
       prev.map((ch) => (ch.id === id ? { ...ch, muted: !ch.muted } : ch))
@@ -168,16 +275,33 @@ export const AudioMixerWorkspace: React.FC<AudioMixerWorkspaceProps> = ({
           </div>
 
           {/* Real-time Spectrum Analyzer & Voice EQ Visualizer */}
-          <div className="h-32 bg-studio-950 border-t border-studio-800 p-3 flex flex-col">
-            <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1">
-              <span className="flex items-center gap-1 text-emerald-400 font-bold">
-                <Activity className="w-3 h-3" />
-                <span>3-BAND SPEECH MASTERING EQ</span>
+          <div className="h-44 bg-studio-950 border-t border-studio-800 p-3 flex flex-col">
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1.5">
+              <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
+                <Activity className="w-3 h-3 text-cyan-400" />
+                <span>32-BAND FFT SPECTRUM &amp; PARAMETRIC EQ CURVE</span>
               </span>
-              <span>80Hz HIGHPASS: ACTIVE</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 font-mono">
+                  GR: -2.4 dB
+                </span>
+                <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30 font-mono">
+                  80Hz HPF ON
+                </span>
+              </div>
             </div>
 
-            <div className="flex-1 bg-black/90 rounded border border-studio-800 p-2 flex items-center justify-around gap-4 text-xs">
+            {/* Canvas Spectrum Display */}
+            <div className="h-20 w-full bg-black rounded border border-studio-800 overflow-hidden mb-2 relative">
+              <canvas
+                ref={eqCanvasRef}
+                width={360}
+                height={78}
+                className="w-full h-full block"
+              />
+            </div>
+
+            <div className="bg-black/60 rounded border border-studio-800/80 p-2 flex items-center justify-around gap-4 text-xs">
               {/* Low Shelf */}
               <div className="flex-1 flex flex-col items-center">
                 <span className="text-[9px] text-slate-500 mb-1">LOW 100Hz</span>

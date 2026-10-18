@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { FileText, ExternalLink, Sparkles, CheckCircle2, Bookmark, BookOpen, Quote, ChevronRight, Layers } from "lucide-react";
@@ -35,7 +35,7 @@ export const ScriptPanel: React.FC<ScriptPanelProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-[#05060a] overflow-y-auto select-none text-xs text-slate-200 border-r border-white/5">
-      {/* Slot Studio Header */}
+      {/* OmniCut Header */}
       <div className="p-3.5 bg-[#0a0c12] border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-[#3B63FF]" />
@@ -55,7 +55,7 @@ export const ScriptPanel: React.FC<ScriptPanelProps> = ({
           </p>
         </div>
 
-        {/* Slot Studio: Research That Lifts Off the Page */}
+        {/* OmniCut: Research That Lifts Off the Page */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400">
             <span>Primary Scientific Evidence</span>

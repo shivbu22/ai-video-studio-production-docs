@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { Sparkles, X, Wand2, Film, Clock, Palette, CheckCircle2, Terminal, User, BookOpen } from "lucide-react";
@@ -88,7 +88,7 @@ export const OnePromptModal: React.FC<OnePromptModalProps> = ({
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">1-Prompt Autonomous Video Generator</h2>
-              <p className="text-[11px] text-slate-400">Slot Studio Clean-Room Route B &bull; Research to Final Render in 1 Click</p>
+              <p className="text-[11px] text-slate-400">OmniCut Clean-Room Route B &bull; Research to Final Render in 1 Click</p>
             </div>
           </div>
           <button

@@ -1,14 +1,20 @@
-"use client";
+﻿﻿"use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Header, WorkspaceMode } from "../components/Header";
 import { ProgramMonitor } from "../components/ProgramMonitor";
 import { AudioMeter } from "../components/AudioMeter";
 import { ClipInspector } from "../components/RightPanel/ClipInspector";
 import { AICommandBar } from "../components/AICommandBar/AICommandBar";
 import { OnePromptModal } from "../components/Modals/OnePromptModal";
+import { AutoBRollModal } from "../components/Modals/AutoBRollModal";
 import { ExportPublishModal } from "../components/Modals/ExportPublishModal";
+import { ClientExportModal } from "../components/Modals/ClientExportModal";
+import { ShareReviewLinkModal } from "../components/Modals/ShareReviewLinkModal";
+import { StoryboardGeneratorModal } from "../components/Modals/StoryboardGeneratorModal";
 import { ConnectionsModal } from "../components/Modals/ConnectionsModal";
+import { CollaborationInviteModal } from "../components/Modals/CollaborationInviteModal";
+import { ReviewCommentsDrawer } from "../components/Modals/ReviewCommentsDrawer";
 import { YouTubeClipFinder } from "../components/LeftPanel/YouTubeClipFinder";
 import { VoiceCleanStation } from "../components/LeftPanel/VoiceCleanStation";
 import { TranscriptEditor, TranscriptWord } from "../components/LeftPanel/TranscriptEditor";
@@ -29,6 +35,15 @@ import { VoiceCleanupWorkspace } from "../components/Workspaces/VoiceCleanupWork
 import { Remotion3DWorkspace } from "../components/Workspaces/Remotion3DWorkspace";
 import { CaptionsWorkspace } from "../components/Workspaces/CaptionsWorkspace";
 import { PublishingKitWorkspace } from "../components/Workspaces/PublishingKitWorkspace";
+import { VFXInpaintingWorkspace } from "../components/Workspaces/VFXInpaintingWorkspace";
+import { LanguageDubbingWorkspace } from "../components/Workspaces/LanguageDubbingWorkspace";
+import { Volumetric3DWorkspace } from "../components/Workspaces/Volumetric3DWorkspace";
+import { SpatialVideoWorkspace } from "../components/Workspaces/SpatialVideoWorkspace";
+import { SemanticMAMWorkspace } from "../components/Workspaces/SemanticMAMWorkspace";
+import { MultiCamWorkspace } from "../components/Workspaces/MultiCamWorkspace";
+import { GenerativeStyleWorkspace } from "../components/Workspaces/GenerativeStyleWorkspace";
+import { NeuralMattingWorkspace } from "../components/Workspaces/NeuralMattingWorkspace";
+import { AutomationStudioWorkspace } from "../components/Workspaces/AutomationStudioWorkspace";
 import { ClaudeAICopilotDrawer } from "../components/ClaudeAICopilotDrawer";
 
 // Initial Demo Tracks
@@ -97,11 +112,21 @@ export default function StudioEditorPage() {
   // Workspace Modes
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceMode>("edit");
   const [isOnePromptModalOpen, setIsOnePromptModalOpen] = useState(false);
+  const [isAutoBRollModalOpen, setIsAutoBRollModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isConnectionsOpen, setIsConnectionsOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [activeLut, setActiveLut] = useState("Moody Teal & Orange");
   const [projectTitle, setProjectTitle] = useState("Quantum Supremacy 2026");
+  const [isCollabInviteOpen, setIsCollabInviteOpen] = useState(false);
+  const [isCommentsDrawerOpen, setIsCommentsDrawerOpen] = useState(false);
+  const [isClientExportOpen, setIsClientExportOpen] = useState(false);
+  const [isShareReviewOpen, setIsShareReviewOpen] = useState(false);
+  const [isStoryboardOpen, setIsStoryboardOpen] = useState(false);
+  const [collaborators, setCollaborators] = useState([
+    { id: "peer_1", name: "Sarah L. (VFX)", color: "bg-emerald-500", playheadMs: 1200 },
+    { id: "peer_2", name: "Marcus V. (Audio)", color: "bg-purple-500", playheadMs: 6800 },
+  ]);
 
   const handleSelectProjectPreset = (presetId: string) => {
     pushHistory();
@@ -152,8 +177,134 @@ export default function StudioEditorPage() {
   // Timeline State
   const [tracks, setTracks] = useState<TrackConfig[]>(INITIAL_TRACKS);
   const [clips, setClips] = useState<TimelineClip[]>(INITIAL_CLIPS);
+  const [words, setWords] = useState<TranscriptWord[]>(INITIAL_WORDS);
+  const projectFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Auto-load project state from localStorage on initial render
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("omnicut_project_state");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.clips && Array.isArray(parsed.clips) && parsed.clips.length > 0) {
+          setClips(parsed.clips);
+        }
+        if (parsed.projectTitle) {
+          setProjectTitle(parsed.projectTitle);
+        }
+        if (parsed.words && Array.isArray(parsed.words) && parsed.words.length > 0) {
+          setWords(parsed.words);
+        }
+      }
+    } catch (e) {
+      console.warn("Could not load omnicut_project_state", e);
+    }
+  }, []);
+
+  // Autosave project state to localStorage on state changes
+  useEffect(() => {
+    try {
+      const payload = {
+        projectTitle,
+        clips,
+        words,
+        updatedAt: Date.now(),
+      };
+      localStorage.setItem("omnicut_project_state", JSON.stringify(payload));
+    } catch (e) {
+      console.warn("Could not autosave to localStorage", e);
+    }
+  }, [clips, projectTitle, words]);
+
+  // Save project file (.omnicut)
+  const handleSaveProject = () => {
+    try {
+      const data = {
+        omnicutVersion: "1.0.0",
+        projectTitle,
+        totalDurationMs,
+        clips,
+        words,
+        exportedAt: new Date().toISOString(),
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${projectTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.omnicut`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Saved project file (.omnicut)");
+    } catch (e) {
+      showToast("Failed to save project file");
+    }
+  };
+
+  // Load project file (.omnicut) with defensive validation & sanitization
+  const handleLoadProjectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Enforce max project file size limit (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Security: File exceeds 5MB limit");
+      e.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        // Guard against prototype pollution keys
+        if (text.includes('"__proto__"') || text.includes('"constructor"') || text.includes('"prototype"')) {
+          showToast("Security alert: Malformed JSON detected");
+          return;
+        }
+
+        const parsed = JSON.parse(text);
+        if (parsed && typeof parsed === "object" && Array.isArray(parsed.clips)) {
+          // Validate individual clip structure
+          const validClips: TimelineClip[] = parsed.clips.filter((c: any) => 
+            c && 
+            typeof c.id === "string" && 
+            typeof c.trackId === "string" && 
+            typeof c.title === "string" && 
+            typeof c.startMs === "number" && 
+            typeof c.durationMs === "number" &&
+            c.durationMs > 0 &&
+            c.startMs >= 0
+          );
+
+          if (validClips.length === 0) {
+            showToast("Invalid project: No valid clips found");
+            return;
+          }
+
+          pushHistory();
+          setClips(validClips);
+          if (parsed.projectTitle && typeof parsed.projectTitle === "string") {
+            setProjectTitle(parsed.projectTitle.slice(0, 100).replace(/[<>\/]/g, ""));
+          }
+          if (parsed.words && Array.isArray(parsed.words)) {
+            const validWords = parsed.words.filter((w: any) => 
+              w && typeof w.id === "string" && typeof w.word === "string"
+            );
+            setWords(validWords);
+          }
+          showToast(`Safely restored: ${parsed.projectTitle || file.name}`);
+        } else {
+          showToast("Invalid .omnicut project file structure");
+        }
+      } catch (err) {
+        showToast("Error parsing project file");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
   const [selectedClipId, setSelectedClipId] = useState<string | null>("c_v1_1");
-  const [showInspector, setShowInspector] = useState(false);
+  const [showInspector, setShowInspector] = useState(true);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
   const [toolMode, setToolMode] = useState<ToolMode>("select");
   const [snapping, setSnapping] = useState(true);
@@ -161,7 +312,6 @@ export default function StudioEditorPage() {
   const [outPointMs, setOutPointMs] = useState<number | null>(8000);
   const [shuttleSpeed, setShuttleSpeed] = useState<number>(0);
   const [zoomScale, setZoomScale] = useState(55); // px per second
-  const [words, setWords] = useState<TranscriptWord[]>(INITIAL_WORDS);
 
   // Undo/Redo Stacks
   const [history, setHistory] = useState<TimelineClip[][]>([]);
@@ -285,7 +435,16 @@ export default function StudioEditorPage() {
         e.preventDefault();
         const input = document.querySelector('input[placeholder*="Direct the AI"]') as HTMLInputElement;
         if (input) input.focus();
-      } else if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+              } else if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
+          e.preventDefault();
+          handleSaveProject();
+        } else if ((e.ctrlKey || e.metaKey) && (e.key === "o" || e.key === "O")) {
+          e.preventDefault();
+          projectFileInputRef.current?.click();
+        } else if (e.shiftKey && (e.key === "Delete" || e.key === "Backspace")) {
+          e.preventDefault();
+          handleRippleDeleteSelected();
+        } else if ((e.ctrlKey || e.metaKey) && e.key === "z") {
         handleUndo();
       } else if ((e.ctrlKey || e.metaKey) && e.key === "y") {
         handleRedo();
@@ -354,6 +513,16 @@ export default function StudioEditorPage() {
     );
   };
 
+  const handleUpdateClipProps = (clipId: string, updates: Partial<TimelineClip>) => {
+    setClips((prev) =>
+      prev.map((c) =>
+        c.id === clipId
+          ? { ...c, ...updates }
+          : c
+      )
+    );
+  };
+
   // Split Clip At Timestamp
   const handleClipSplit = (clipId: string, splitAtMs: number) => {
     const target = clips.find((c) => c.id === clipId);
@@ -389,6 +558,27 @@ export default function StudioEditorPage() {
     if (clipAtPlayhead) {
       handleClipSplit(clipAtPlayhead.id, currentTimeMs);
     }
+  };
+
+  const handleRippleDeleteSelected = () => {
+    if (!selectedClipId) return;
+    const target = clips.find((c) => c.id === selectedClipId);
+    if (!target) return;
+    pushHistory();
+    const targetEnd = target.startMs + target.durationMs;
+    const cutDuration = target.durationMs;
+    setClips((prev) =>
+      prev
+        .filter((c) => c.id !== selectedClipId)
+        .map((c) => {
+          if (c.trackId === target.trackId && c.startMs >= targetEnd) {
+            return { ...c, startMs: Math.max(0, c.startMs - cutDuration) };
+          }
+          return c;
+        })
+    );
+    setSelectedClipId(null);
+    showToast(`Ripple deleted ${target.title} (-${(cutDuration / 1000).toFixed(1)}s gap closed)`);
   };
 
   const handleDeleteSelected = () => {
@@ -445,6 +635,25 @@ export default function StudioEditorPage() {
   };
 
   // Insert Template
+  const handleAddUploadedClip = (uploaded: any) => {
+    pushHistory();
+    const isAudio = uploaded.type === "audio";
+    const trackId = isAudio ? "a1" : "v1";
+    const newClip: TimelineClip = {
+      id: `c_${trackId}_${Date.now()}`,
+      trackId: trackId,
+      title: uploaded.name,
+      startMs: currentTimeMs,
+      durationMs: 5000,
+      colorClass: isAudio ? "bg-emerald-600/35 text-emerald-200" : "bg-blue-600/35 text-blue-200",
+      borderClass: isAudio ? "border-emerald-500/50" : "border-blue-500/50",
+      type: isAudio ? "audio" : "video",
+    };
+    setClips((prev) => [...prev, newClip]);
+    setSelectedClipId(newClip.id);
+    showToast(`Added ${uploaded.name} to track ${trackId.toUpperCase()} at playhead`);
+  };
+
   const handleInsertTemplate = (templateOrId: MotionTemplateItem | string, props?: any) => {
     pushHistory();
     const templateName = typeof templateOrId === "string" ? templateOrId : templateOrId.name;
@@ -615,7 +824,29 @@ export default function StudioEditorPage() {
 
   // Master Render Export (100% Free & Unmetered)
 
-  // Slot Studio YouTube Clip Ingestion
+  // OmniCut YouTube Clip Ingestion
+  const handleInsertBRollClips = (newBRolls: Array<{ title: string; durationMs: number; trackId: string }>) => {
+    pushHistory();
+    let offsetMs = currentTimeMs;
+    const createdClips: TimelineClip[] = newBRolls.map((item, idx) => {
+      const clip: TimelineClip = {
+        id: `c_broll_${Date.now()}_${idx}`,
+        trackId: "v2",
+        title: item.title,
+        startMs: offsetMs,
+        durationMs: item.durationMs,
+        colorClass: "bg-cyan-600/40 text-cyan-200",
+        borderClass: "border-cyan-500/60",
+        type: "video",
+      };
+      offsetMs += item.durationMs + 1000;
+      return clip;
+    });
+
+    setClips((prev) => [...prev, ...createdClips]);
+    showToast(`✨ Added ${createdClips.length} AI B-Roll cutaways to track V2!`);
+  };
+
   const handleInsertYouTubeClip = (clipData: { title: string; durationMs: number; source: string }) => {
     const newId = `c_yt_${Date.now()}`;
     const newClip: TimelineClip = {
@@ -632,7 +863,7 @@ export default function StudioEditorPage() {
     showToast(`Saved 4K footage from YouTube: ${clipData.title} (3840×2160)`);
   };
 
-  // Slot Studio Clean Voice Ingestion
+  // OmniCut Clean Voice Ingestion
   const handleApplyCleanVoice = () => {
     setClips((prev) => prev.map((c) => {
       if (c.trackId === "a1") {
@@ -658,7 +889,8 @@ export default function StudioEditorPage() {
   return (
     <div className="flex flex-col h-screen w-screen bg-studio-950 text-slate-100 overflow-hidden font-sans">
       {/* 1. Header Toolbar */}
-      <Header
+      <input type="file" ref={projectFileInputRef} onChange={handleLoadProjectFile} accept=".omnicut,.json" className="hidden" />
+        <Header onSaveProject={handleSaveProject} onLoadProject={() => projectFileInputRef.current?.click()}
         projectTitle={projectTitle}
         previewQuality={previewQuality}
         onQualityChange={setPreviewQuality}
@@ -693,6 +925,13 @@ export default function StudioEditorPage() {
         onToggleCopilot={() => setIsCopilotOpen(!isCopilotOpen)}
         isCopilotOpen={isCopilotOpen}
         onSelectProjectPreset={handleSelectProjectPreset}
+        onOpenClientExport={() => setIsClientExportOpen(true)}
+        onOpenShareReview={() => setIsShareReviewOpen(true)}
+        onOpenStoryboard={() => setIsStoryboardOpen(true)}
+        onOpenCollabInvite={() => setIsCollabInviteOpen(true)}
+        onToggleCommentsDrawer={() => setIsCommentsDrawerOpen(!isCommentsDrawerOpen)}
+        isCommentsDrawerOpen={isCommentsDrawerOpen}
+        commentCount={3}
       />
 
       {/* 2. Middle Work Area (Switches seamlessly between Edit, Script & Research, ClipFinder, VO Cleanup, Remotion 3D, Color, Audio, Director, and Publish suites) */}
@@ -817,11 +1056,236 @@ export default function StudioEditorPage() {
             onRejectProposal={handleRejectProposal}
             onExecuteCommand={handleExecuteAICommand}
             onShowToast={showToast}
+            onOpenStoryboard={() => setIsStoryboardOpen(true)}
+            onApplySwarmEdits={() => {
+              // Execute multi-agent timeline re-cut package
+              pushHistory();
+              setClips((prev) => [
+                ...prev.map((c) => {
+                  if (c.id === "c_v1_1") return { ...c, durationMs: 2500, title: "Scene 1: Hook (2.5s Paced)" };
+                  if (c.id === "c_v1_2") return { ...c, startMs: 2500, durationMs: 3200, title: "Scene 2: 4K Macro Qubit (3.2s)" };
+                  if (c.id === "c_v2_2") return { ...c, startMs: 1500, durationMs: 4000 };
+                  return c;
+                }),
+              ]);
+              setActiveWorkspace("edit");
+              showToast("Multi-Agent Swarm: Front-loaded hook & compressed scene 2 to 3.2s!");
+            }}
           />
         )}
 
         {activeWorkspace === "publish" && (
           <PublishingKitWorkspace />
+        )}
+
+        {activeWorkspace === "vfx" && (
+          <VFXInpaintingWorkspace
+            projectTitle={projectTitle}
+            currentTimeMs={currentTimeMs}
+            onSeek={setCurrentTimeMs}
+            onApplyVFXToTimeline={(type, details) => {
+              const newVfxClip: TimelineClip = {
+                id: `vfx_${Date.now()}`,
+                trackId: "v2",
+                title: `VFX [${type}]: ${details}`,
+                startMs: Math.round(currentTimeMs),
+                durationMs: 4500,
+                colorClass: "bg-cyan-600/40 text-cyan-200",
+                borderClass: "border-cyan-500/60",
+                type: "motion",
+              };
+              setClips((prev) => [...prev, newVfxClip]);
+              setActiveWorkspace("edit");
+              showToast(`Added ${type} layer to Track V2!`);
+            }}
+            onShowToast={showToast}
+          />
+        )}
+
+        {activeWorkspace === "dubbing" && (
+          <LanguageDubbingWorkspace
+            projectTitle={projectTitle}
+            currentTimeMs={currentTimeMs}
+            onSeek={setCurrentTimeMs}
+            onApplyDubbedTrackToTimeline={(langCode, langName) => {
+              const dubbedClip: TimelineClip = {
+                id: `dub_${langCode}_${Date.now()}`,
+                trackId: "a1",
+                title: `Voiceover (${langName} Cloned Dub): voice_${langCode}.wav`,
+                startMs: 0,
+                durationMs: 14200,
+                colorClass: "bg-purple-600/35 text-purple-200",
+                borderClass: "border-purple-500/50",
+                type: "audio",
+                waveform: true,
+              };
+              setClips((prev) => [
+                ...prev.filter((c) => c.trackId !== "a1"),
+                dubbedClip
+              ]);
+              setActiveWorkspace("edit");
+              showToast(`Applied ${langName} Dubbed Audio to Track A1!`);
+            }}
+            onShowToast={showToast}
+          />
+        )}
+
+        {activeWorkspace === "volumetric" && (
+          <Volumetric3DWorkspace
+            projectTitle={projectTitle}
+            currentTimeMs={currentTimeMs}
+            onSeek={setCurrentTimeMs}
+            onApply3DToTimeline={(sceneName, lensMm) => {
+              const new3DClip: TimelineClip = {
+                id: `splat_${Date.now()}`,
+                trackId: "v2",
+                title: `3D Splat: ${sceneName} (${lensMm}mm)`,
+                startMs: Math.round(currentTimeMs),
+                durationMs: 5000,
+                colorClass: "bg-blue-600/40 text-blue-200",
+                borderClass: "border-blue-500/60",
+                type: "motion",
+              };
+              setClips((prev) => [...prev, new3DClip]);
+              setActiveWorkspace("edit");
+              showToast(`Added 3D Volumetric Flythrough to Track V2!`);
+            }}
+            onShowToast={showToast}
+          />
+        )}
+
+        {activeWorkspace === "spatial" && (
+          <SpatialVideoWorkspace
+            onClose={() => setActiveWorkspace("edit")}
+            onApplySpatialTrack={(mode, disparityOffset) => {
+              const newSpatialClip: TimelineClip = {
+                id: `spatial_${Date.now()}`,
+                trackId: "v2",
+                title: `Spatial 3D (${mode.toUpperCase()} ±${disparityOffset.toFixed(1)}px)`,
+                startMs: Math.round(currentTimeMs),
+                durationMs: 6000,
+                colorClass: "bg-cyan-600/40 text-cyan-200",
+                borderClass: "border-cyan-500/60",
+                type: "motion",
+              };
+              setClips((prev) => [...prev, newSpatialClip]);
+              setActiveWorkspace("edit");
+              showToast(`Applied MV-HEVC Spatial Stereoscopic Track to V2!`);
+            }}
+          />
+        )}
+
+        {activeWorkspace === "mam" && (
+          <SemanticMAMWorkspace
+            onClose={() => setActiveWorkspace("edit")}
+            onApplyClipToTimeline={(clip) => {
+              const newMamClip: TimelineClip = {
+                id: `mam_${Date.now()}`,
+                trackId: "v2",
+                title: `MAM: ${clip.title} [${clip.resolution}]`,
+                startMs: Math.round(currentTimeMs),
+                durationMs: clip.durationMs,
+                colorClass: "bg-emerald-600/40 text-emerald-200",
+                borderClass: "border-emerald-500/60",
+                type: "video",
+              };
+              setClips((prev) => [...prev, newMamClip]);
+              setActiveWorkspace("edit");
+              showToast(`Added "${clip.title}" from Cloud MAM to Track V2!`);
+            }}
+            onShowToast={showToast}
+          />
+        )}
+
+        {activeWorkspace === "multicam" && (
+          <MultiCamWorkspace
+            onClose={() => setActiveWorkspace("edit")}
+            onApplyMultiCamEDL={(cuts) => {
+              // Generate timeline clips from multi-cam cut decisions on Track V1
+              const newClips: TimelineClip[] = cuts.map((cut, idx) => ({
+                id: `multicam_${Date.now()}_${idx}`,
+                trackId: "v1",
+                title: `${cut.selectedAngleName.split(":")[0]} (${cut.triggerReason === "manual_operator" ? "Manual" : "Active Speaker"})`,
+                startMs: cut.timestampMs,
+                durationMs: 3500,
+                colorClass: "bg-red-600/40 text-red-200",
+                borderClass: "border-red-500/60",
+                type: "video",
+              }));
+              if (newClips.length > 0) {
+                setClips((prev) => [...prev.filter((c) => c.trackId !== "v1"), ...newClips]);
+              }
+              setActiveWorkspace("edit");
+              showToast(`Baked Multi-Cam EDL decisions onto Track V1!`);
+            }}
+            onShowToast={showToast}
+          />
+        )}
+
+        {activeWorkspace === "style" && (
+          <GenerativeStyleWorkspace
+            onClose={() => setActiveWorkspace("edit")}
+            onApplyStyleToTimeline={(styleName, prompt) => {
+              const newStyleClip: TimelineClip = {
+                id: `style_${Date.now()}`,
+                trackId: "v2",
+                title: `GenVFX: ${styleName}`,
+                startMs: Math.round(currentTimeMs),
+                durationMs: 7000,
+                colorClass: "bg-pink-600/40 text-pink-200",
+                borderClass: "border-pink-500/60",
+                type: "motion",
+              };
+              setClips((prev) => [...prev, newStyleClip]);
+              setActiveWorkspace("edit");
+              showToast(`Applied Generative ${styleName} Stylized VFX to Track V2!`);
+            }}
+            onShowToast={showToast}
+          />
+        )}
+
+        {activeWorkspace === "matting" && (
+          <NeuralMattingWorkspace
+            onClose={() => setActiveWorkspace("edit")}
+            onApplyMatteToTimeline={(backgroundName) => {
+              const newMatteClip: TimelineClip = {
+                id: `matte_${Date.now()}`,
+                trackId: "v2",
+                title: `Matte Cutout: Virtual Set (${backgroundName.split(" ")[0]})`,
+                startMs: Math.round(currentTimeMs),
+                durationMs: 6500,
+                colorClass: "bg-emerald-600/40 text-emerald-200",
+                borderClass: "border-emerald-500/60",
+                type: "motion",
+              };
+              setClips((prev) => [...prev, newMatteClip]);
+              setActiveWorkspace("edit");
+              showToast(`Composite Neural Matte with ${backgroundName} applied to Timeline!`);
+            }}
+            onShowToast={showToast}
+          />
+        )}
+
+        {activeWorkspace === "automation" && (
+          <AutomationStudioWorkspace
+            onClose={() => setActiveWorkspace("edit")}
+            onApplyShortToTimeline={(shortTitle) => {
+              const newShortClip: TimelineClip = {
+                id: `auto_${Date.now()}`,
+                trackId: "v1",
+                title: `AutoShort: ${shortTitle.split(":")[1] || shortTitle}`,
+                startMs: 0,
+                durationMs: 15000,
+                colorClass: "bg-indigo-600/40 text-indigo-200",
+                borderClass: "border-indigo-500/60",
+                type: "video",
+              };
+              setClips((prev) => [...prev.filter((c) => c.trackId !== "v1"), newShortClip]);
+              setActiveWorkspace("edit");
+              showToast(`Loaded Headless Pipeline Deliverable to Timeline Track V1!`);
+            }}
+            onShowToast={showToast}
+          />
         )}
 
         {activeWorkspace === "edit" && (
@@ -978,6 +1442,7 @@ export default function StudioEditorPage() {
                 <ClipInspector
                   clip={selectedClip}
                   onClose={() => setShowInspector(false)}
+                  onUpdateClipProps={handleUpdateClipProps}
                 />
               )}
 
@@ -1071,6 +1536,7 @@ export default function StudioEditorPage() {
             headerWidth={HEADER_WIDTH}
             inPointMs={inPointMs}
             outPointMs={outPointMs}
+            collaborators={collaborators}
           />
         </div>
       )}
@@ -1087,6 +1553,15 @@ export default function StudioEditorPage() {
         onGenerate={handleOnePromptGenerate}
       />
 
+      {/* AI Semantic B-Roll Auto-Inserter Modal */}
+      <AutoBRollModal
+        isOpen={isAutoBRollModalOpen}
+        onClose={() => setIsAutoBRollModalOpen(false)}
+        projectTitle={projectTitle}
+        currentTimeMs={currentTimeMs}
+        onInsertBRollClips={handleInsertBRollClips}
+      />
+
       {/* 6. Creator Publish Pack & 4K Export Modal */}
       <ExportPublishModal
         isOpen={isExportModalOpen}
@@ -1096,7 +1571,60 @@ export default function StudioEditorPage() {
         clips={clips}
       />
 
-      {/* 7. Claude AI Copilot Dialog Stream (Slot Studio Node) */}
+      {/* Autonomous AI Storyboard Diffuser Modal */}
+      <StoryboardGeneratorModal
+        isOpen={isStoryboardOpen}
+        onClose={() => setIsStoryboardOpen(false)}
+        projectTitle={projectTitle}
+        onInsertStoryboardScenes={() => {
+          pushHistory();
+          const sbClips: TimelineClip[] = [
+            { id: "sb_v1_1", trackId: "v1", title: "Shot 1: Cryostat Crane (4s)", startMs: 0, durationMs: 4000, colorClass: "bg-amber-600/35 text-amber-200", borderClass: "border-amber-500/50", type: "video" },
+            { id: "sb_v1_2", trackId: "v1", title: "Shot 2: Qubit Macro (4s)", startMs: 4000, durationMs: 4000, colorClass: "bg-cyan-600/35 text-cyan-200", borderClass: "border-cyan-500/50", type: "video" },
+            { id: "sb_v2_1", trackId: "v2", title: "Shot 3: 3D Speedup Chart (3s)", startMs: 8000, durationMs: 3000, colorClass: "bg-purple-600/40 text-purple-200", borderClass: "border-purple-500/60", type: "motion" },
+            { id: "sb_v1_3", trackId: "v1", title: "Shot 4: Supercomputer Aerial (3s)", startMs: 11000, durationMs: 3000, colorClass: "bg-blue-600/35 text-blue-200", borderClass: "border-blue-500/50", type: "video" },
+          ];
+          setClips((prev) => [...prev.filter((c) => c.trackId === "a1" || c.trackId === "a2" || c.trackId === "v3"), ...sbClips]);
+          setActiveWorkspace("edit");
+          showToast("Inserted 4-Panel Storyboard Narrative into Timeline!");
+        }}
+        onShowToast={showToast}
+      />
+
+      {/* Enterprise Watermarked Client Screener Modal */}
+      <ShareReviewLinkModal
+        isOpen={isShareReviewOpen}
+        onClose={() => setIsShareReviewOpen(false)}
+        projectTitle={projectTitle}
+        onShowToast={showToast}
+      />
+
+      {/* Hardware Local GPU Export Modal (WebCodecs & WebGPU) */}
+      <ClientExportModal
+        isOpen={isClientExportOpen}
+        onClose={() => setIsClientExportOpen(false)}
+        projectTitle={projectTitle}
+        totalDurationMs={totalDurationMs}
+        onShowToast={showToast}
+      />
+
+      {/* Multiplayer Collaboration Invite Modal */}
+      <CollaborationInviteModal
+        isOpen={isCollabInviteOpen}
+        onClose={() => setIsCollabInviteOpen(false)}
+        projectTitle={projectTitle}
+      />
+
+      {/* Frame-Accurate Review Comments Drawer */}
+      <ReviewCommentsDrawer
+        isOpen={isCommentsDrawerOpen}
+        onClose={() => setIsCommentsDrawerOpen(false)}
+        currentTimeMs={currentTimeMs}
+        onSeek={setCurrentTimeMs}
+        onShowToast={showToast}
+      />
+
+      {/* 7. Claude AI Copilot Dialog Stream (OmniCut Node) */}
       <ClaudeAICopilotDrawer
         isOpen={isCopilotOpen}
         onClose={() => setIsCopilotOpen(false)}
@@ -1111,7 +1639,7 @@ export default function StudioEditorPage() {
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <span>Remotion v4.1.8 · Broadcast Safe -14.0 LUFS</span>
+          <span>OmniCut v1.0 · Broadcast Safe -14.0 LUFS</span>
           <span className="text-slate-400">30.00 FPS</span>
         </div>
       </footer>

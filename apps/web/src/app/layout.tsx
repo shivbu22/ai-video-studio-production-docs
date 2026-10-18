@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI Video Studio — Route B NLE Platform",
-  description: "Transform voiceover & topic brief into high-retention 1080p master videos, Shorts, and publish packs with Remotion and MCP agent editing.",
+  title: "OmniCut",
+  description: "OmniCut — Professional AI-powered non-linear video editor.",
 };
 
 export default function RootLayout({

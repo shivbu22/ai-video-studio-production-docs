@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { 
@@ -211,7 +211,7 @@ export const CaptionsWorkspace: React.FC<CaptionsWorkspaceProps> = ({
             <span className="text-xs font-bold text-white tracking-wide">KINETIC CAPTIONS STUDIO</span>
           </div>
           <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono">
-            Slot Studio FX
+            OmniCut FX
           </span>
         </div>
 

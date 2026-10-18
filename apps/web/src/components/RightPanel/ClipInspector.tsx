@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { Sliders, Move, Eye, Volume2, Palette, Sparkles, X, Check, BarChart3, Trophy, FileText, Layers, Box, RotateCw } from "lucide-react";
@@ -8,12 +8,14 @@ export interface ClipInspectorProps {
   clip: TimelineClip | null;
   onClose: () => void;
   onUpdateClipProps?: (clipId: string, updates: Partial<TimelineClip>) => void;
+  onOpenVFXStudio?: () => void;
 }
 
 export const ClipInspector: React.FC<ClipInspectorProps> = ({
   clip,
   onClose,
   onUpdateClipProps,
+  onOpenVFXStudio,
 }) => {
   const [scale, setScale] = useState(100);
   const [posX, setPosX] = useState(0);
@@ -24,12 +26,34 @@ export const ClipInspector: React.FC<ClipInspectorProps> = ({
   const [exposure, setExposure] = useState(0);
   const [saturation, setSaturation] = useState(100);
 
-  // Slot Studio Motion Graphic Parameters
+  // Transitions & Keyframing State
+  const [transitionInType, setTransitionInType] = useState<string>(clip?.transitionIn?.type || "none");
+  const [transitionInDuration, setTransitionInDuration] = useState<number>(clip?.transitionIn?.durationMs || 500);
+  const [transitionOutType, setTransitionOutType] = useState<string>(clip?.transitionOut?.type || "none");
+  const [transitionOutDuration, setTransitionOutDuration] = useState<number>(clip?.transitionOut?.durationMs || 500);
+  const [isKeyframeEnabled, setIsKeyframeEnabled] = useState<boolean>(false);
+  const [keyframeEasing, setKeyframeEasing] = useState<string>("easeInOut");
+
+  // OmniCut Motion Graphic Parameters
   const [motionMetricA, setMotionMetricA] = useState("10,000 yrs");
   const [motionMetricB, setMotionMetricB] = useState("200 sec");
   const [mirrorFloor, setMirrorFloor] = useState(true);
   const [isometricAngle, setIsometricAngle] = useState(35);
   const [motionAccentColor, setMotionAccentColor] = useState("#3B63FF");
+
+  const handleApplyTransitions = (
+    inType = transitionInType, 
+    inDur = transitionInDuration, 
+    outType = transitionOutType, 
+    outDur = transitionOutDuration
+  ) => {
+    if (!clip || !onUpdateClipProps) return;
+    onUpdateClipProps(clip.id, {
+      transitionIn: inType !== "none" ? { type: inType as any, durationMs: inDur } : undefined,
+      transitionOut: outType !== "none" ? { type: outType as any, durationMs: outDur } : undefined,
+      hasFx: inType !== "none" || outType !== "none",
+    });
+  };
 
   if (!clip) {
     return (
@@ -72,13 +96,13 @@ export const ClipInspector: React.FC<ClipInspectorProps> = ({
       </div>
 
       <div className="p-4 space-y-5 flex-1">
-        {/* Section 0: SLOT STUDIO 3D MOTION GRAPHIC CONTROLS */}
+        {/* Section 0: OmniCut 3D MOTION GRAPHIC CONTROLS */}
         {isMotion && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-slate-200 font-bold uppercase tracking-wider text-[10px]">
                 <Sparkles className="w-3 h-3 text-[#3B63FF]" />
-                <span>Slot Studio Motion FX</span>
+                <span>OmniCut Motion FX</span>
               </div>
               <span className="text-[9px] bg-[#3B63FF]/20 text-[#3B63FF] border border-[#3B63FF]/40 px-1.5 py-0.5 rounded font-mono font-bold">
                 Remotion 3D
@@ -324,6 +348,152 @@ export const ClipInspector: React.FC<ClipInspectorProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Section 4: PRO NLE TRANSITIONS */}
+        {!isAudio && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-slate-300 font-semibold uppercase tracking-wider text-[10px]">
+                <Layers className="w-3 h-3 text-indigo-400" />
+                <span>Video Transitions</span>
+              </div>
+              <span className="text-[10px] text-indigo-400 font-mono">Clean Cut</span>
+            </div>
+
+            <div className="bg-[#05060a] p-3 rounded-xl border border-white/10 space-y-3 text-xs">
+              {/* Transition In */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-slate-400 text-[10px]">
+                  <span>Transition In</span>
+                  <span className="text-indigo-400 font-mono">{transitionInDuration}ms</span>
+                </div>
+                <div className="flex gap-2">
+                  <select
+                    value={transitionInType}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setTransitionInType(val);
+                      handleApplyTransitions(val, transitionInDuration, transitionOutType, transitionOutDuration);
+                    }}
+                    className="flex-1 bg-[#101319] border border-white/10 rounded px-2 py-1 text-slate-200 text-xs focus:outline-none cursor-pointer"
+                  >
+                    <option value="none">None (Hard Cut)</option>
+                    <option value="crossDissolve">Cross Dissolve</option>
+                    <option value="dipToBlack">Dip to Black</option>
+                    <option value="dipToWhite">Dip to White</option>
+                    <option value="wipeRight">Wipe Right</option>
+                    <option value="zoomBlur">Zoom Blur</option>
+                  </select>
+                </div>
+                {transitionInType !== "none" && (
+                  <input
+                    type="range"
+                    min="100"
+                    max="2000"
+                    step="50"
+                    value={transitionInDuration}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setTransitionInDuration(val);
+                      handleApplyTransitions(transitionInType, val, transitionOutType, transitionOutDuration);
+                    }}
+                    className="w-full accent-indigo-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                )}
+              </div>
+
+              {/* Transition Out */}
+              <div className="space-y-1.5 pt-2 border-t border-white/5">
+                <div className="flex justify-between text-slate-400 text-[10px]">
+                  <span>Transition Out</span>
+                  <span className="text-indigo-400 font-mono">{transitionOutDuration}ms</span>
+                </div>
+                <div className="flex gap-2">
+                  <select
+                    value={transitionOutType}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setTransitionOutType(val);
+                      handleApplyTransitions(transitionInType, transitionInDuration, val, transitionOutDuration);
+                    }}
+                    className="flex-1 bg-[#101319] border border-white/10 rounded px-2 py-1 text-slate-200 text-xs focus:outline-none cursor-pointer"
+                  >
+                    <option value="none">None (Hard Cut)</option>
+                    <option value="crossDissolve">Cross Dissolve</option>
+                    <option value="dipToBlack">Dip to Black</option>
+                    <option value="dipToWhite">Dip to White</option>
+                    <option value="wipeRight">Wipe Right</option>
+                    <option value="zoomBlur">Zoom Blur</option>
+                  </select>
+                </div>
+                {transitionOutType !== "none" && (
+                  <input
+                    type="range"
+                    min="100"
+                    max="2000"
+                    step="50"
+                    value={transitionOutDuration}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setTransitionOutDuration(val);
+                      handleApplyTransitions(transitionInType, transitionInDuration, transitionOutType, val);
+                    }}
+                    className="w-full accent-indigo-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Section 5: KEYFRAME ANIMATOR */}
+        {!isAudio && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-slate-300 font-semibold uppercase tracking-wider text-[10px]">
+                <Sparkles className="w-3 h-3 text-emerald-400" />
+                <span>Keyframe Animator</span>
+              </div>
+              <button
+                onClick={() => setIsKeyframeEnabled(!isKeyframeEnabled)}
+                className={`text-[9px] px-2 py-0.5 rounded font-mono font-bold transition-colors ${
+                  isKeyframeEnabled ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" : "bg-slate-800 text-slate-400"
+                }`}
+              >
+                {isKeyframeEnabled ? "ACTIVE" : "OFF"}
+              </button>
+            </div>
+
+            {isKeyframeEnabled && (
+              <div className="bg-[#05060a] p-3 rounded-xl border border-white/10 space-y-2.5 text-xs">
+                <div className="flex items-center justify-between text-slate-400 text-[10px]">
+                  <span>Motion Easing Curve</span>
+                  <span className="text-emerald-400 font-mono uppercase">{keyframeEasing}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {["linear", "easeInOut", "spring"].map((curve) => (
+                    <button
+                      key={curve}
+                      onClick={() => setKeyframeEasing(curve)}
+                      className={`py-1 rounded text-[10px] font-mono border transition-all ${
+                        keyframeEasing === curve
+                          ? "bg-emerald-600 text-white border-emerald-400"
+                          : "bg-[#101319] text-slate-400 border-white/5 hover:border-white/15"
+                      }`}
+                    >
+                      {curve}
+                    </button>
+                  ))}
+                </div>
+                <div className="p-2 rounded bg-[#101319] border border-white/5 flex items-center justify-between text-[10px] text-slate-300 font-mono">
+                  <span>◆ Start: 100% Scale</span>
+                  <span>➜</span>
+                  <span className="text-emerald-400">◆ End: {scale}% Scale</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

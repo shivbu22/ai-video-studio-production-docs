@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { 
@@ -115,7 +115,7 @@ export const ClaudeAICopilotDrawer: React.FC<ClaudeAICopilotDrawerProps> = ({
           <div className="w-2 h-2 rounded-full bg-violet-400 animate-ping" />
           <span className="text-xs font-bold text-white tracking-wide">CLAUDE AI COPILOT</span>
           <span className="text-[10px] bg-violet-500/20 text-violet-300 px-1.5 py-0.2 rounded font-mono border border-violet-500/30">
-            SlotStudio Node
+            OmniCut Node
           </span>
         </div>
         <button 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { Mic, Volume2, Sparkles, Check, Scissors, Play, RefreshCw, Zap, ShieldCheck } from "lucide-react";
@@ -27,7 +27,7 @@ export const VoiceCleanStation: React.FC<VoiceCleanStationProps> = ({ onApplyVoi
       <div className="p-3.5 bg-[#0a0c12] border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Mic className="w-4 h-4 text-[#3B63FF]" />
-          <span className="text-xs font-bold text-white tracking-wide">Slot Studio Voice Cleaner</span>
+          <span className="text-xs font-bold text-white tracking-wide">OmniCut Voice Cleaner</span>
         </div>
         <span className="text-[10px] bg-emerald-500/10 text-emerald-400 font-semibold px-2 py-0.5 rounded-full border border-emerald-500/30">
           faster-whisper 48kHz
